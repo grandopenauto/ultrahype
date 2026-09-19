@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "collect:intelligence": "node collect-intelligence.js"
+    "collect:intelligence": "node collect-intelligence.js",
+    "worker:intelligence": "node intelligence-worker.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
