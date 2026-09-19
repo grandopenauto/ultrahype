@@ -7,6 +7,7 @@ const toast = document.getElementById('toast');
 const marketInput = document.getElementById('market-search');
 const marketButton = document.getElementById('market-search-btn');
 const marketResult = document.getElementById('market-result');
+const marketStatus = document.querySelector('.market-terminal .status-chip');
 
 if (year) year.textContent = new Date().getFullYear();
 
@@ -37,6 +38,22 @@ document.querySelectorAll('[data-toast]').forEach((button) => {
   button.addEventListener('click', () => showToast(button.dataset.toast));
 });
 
+function ebayMode() {
+  return String(config.integrations?.ebay?.environment || 'sandbox').toLowerCase();
+}
+
+function initializeMarketConnector() {
+  const ebay = config.integrations?.ebay;
+  if (!marketStatus || !marketResult || !ebay?.enabled) return;
+
+  const production = ebayMode() === 'production';
+  marketStatus.textContent = production ? 'LIVE' : 'SANDBOX LIVE';
+  marketResult.classList.add('active');
+  marketResult.innerHTML = production
+    ? '<span>API lane live</span><p>Protected eBay discovery is online through the UltraHype backend.</p>'
+    : '<span>Sandbox API lane live</span><p>The protected connector is online with eBay Sandbox test inventory. Production inventory stays disabled until production credentials are approved and installed.</p>';
+}
+
 async function searchEbay() {
   const query = marketInput?.value.trim();
   if (!query || !marketResult) {
@@ -60,13 +77,26 @@ async function searchEbay() {
   try {
     const url = new URL(`${apiBase}${ebay.searchPath}`);
     url.searchParams.set('q', query);
+    url.searchParams.set('limit', '8');
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error(`Search failed (${response.status})`);
     const payload = await response.json();
-    const count = Array.isArray(payload.items) ? payload.items.length : Number(payload.count || 0);
+    const items = Array.isArray(payload.items) ? payload.items : [];
+    const production = ebayMode() === 'production';
+    const visible = items.slice(0, 5);
+    const rows = visible.length
+      ? visible.map((item) => {
+          const price = item.price?.value != null
+            ? ` · ${escapeHtml(item.price.currency || '')} ${escapeHtml(item.price.value)}`
+            : '';
+          const condition = item.condition ? ` · ${escapeHtml(item.condition)}` : '';
+          return `<p><strong>${escapeHtml(item.title || 'Untitled item')}</strong>${price}${condition}</p>`;
+        }).join('')
+      : '<p>No matching items were returned for this query.</p>';
+
     marketResult.classList.remove('loading');
     marketResult.classList.add('active');
-    marketResult.innerHTML = `<span>Connected result</span><p>${count} item${count === 1 ? '' : 's'} returned for “${escapeHtml(query)}”. The production result renderer can now map the normalized catalog payload into UltraHype cards.</p>`;
+    marketResult.innerHTML = `<span>${production ? 'Connected result' : 'Sandbox result'} · ${items.length} returned</span>${rows}`;
   } catch (error) {
     marketResult.classList.remove('loading');
     marketResult.innerHTML = `<span>Connector unavailable</span><p>${escapeHtml(error.message)}. The public storefront remains isolated from marketplace credentials.</p>`;
@@ -81,6 +111,8 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 }
+
+initializeMarketConnector();
 
 if (marketButton) marketButton.addEventListener('click', searchEbay);
 if (marketInput) {
