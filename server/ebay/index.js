@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -13,6 +15,7 @@ const EBAY_SCOPE = process.env.EBAY_SCOPE || 'https://api.ebay.com/oauth/api_sco
 const MARKETPLACE = process.env.EBAY_MARKETPLACE_ID || 'EBAY_US';
 const CACHE_SECONDS = Math.max(30, Number(process.env.CACHE_SECONDS || 300));
 const RATE_LIMIT_PER_MINUTE = Math.max(1, Number(process.env.RATE_LIMIT_PER_MINUTE || 60));
+const INTELLIGENCE_DIR = process.env.UH_INTELLIGENCE_DIR || path.resolve('..', 'data', 'ebay');
 const ALLOWED_ORIGINS = new Set(
   String(process.env.ALLOWED_ORIGINS || 'https://ultrahype.store')
     .split(',')
@@ -136,7 +139,7 @@ app.get('/health', (_req, res) => {
   res.json({
     ok: true,
     service: 'ultrahype-ebay-gateway',
-    version: '0.1.0',
+    version: '0.2.0',
     environment: EBAY_ENV,
     marketplace: MARKETPLACE
   });
@@ -211,6 +214,21 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
     res.json(payload);
   } catch (error) {
     res.status(error.status || 500).json({ error: 'ebay_gateway_error', message: error.message });
+  }
+});
+
+app.get('/api/commerce/intelligence/discovery', async (_req, res) => {
+  try {
+    const snapshotPath = path.join(INTELLIGENCE_DIR, 'discovery-snapshot.json');
+    const raw = await fs.readFile(snapshotPath, 'utf8');
+    const payload = JSON.parse(raw);
+    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    res.json(payload);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      return res.status(404).json({ error: 'intelligence_snapshot_not_ready' });
+    }
+    res.status(500).json({ error: 'intelligence_read_error', message: error.message });
   }
 });
 
