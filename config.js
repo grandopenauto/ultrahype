@@ -1,11 +1,12 @@
 window.ULTRAHYPE_CONFIG = Object.freeze({
-  version: "1.0.0",
+  version: "1.1.0",
   environment: "launch",
-  apiBase: "",
+  apiBase: "https://api.ultrahype.store",
   integrations: {
     ebay: {
       enabled: false,
-      searchPath: "/api/commerce/ebay/search"
+      searchPath: "/api/commerce/ebay/search",
+      intelligencePath: "/api/commerce/intelligence/discovery"
     },
     hdpPay: {
       enabled: false,
