@@ -33,7 +33,4 @@ function collect() {
 
 console.log(`UltraHype intelligence worker online; interval=${INTERVAL_MINUTES}m`);
 collect();
-setInterval(collect, INTERVAL_MINUTES * 60_000).unref();
-
-// Keep process alive while allowing graceful service shutdown.
-process.stdin.resume();
+setInterval(collect, INTERVAL_MINUTES * 60_000);
