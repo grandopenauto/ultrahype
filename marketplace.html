@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#07070a" />
-  <meta name="description" content="Browse the UltraHype marketplace: connected inventory, categories, real UltraHype trending signals, seller discovery and capability paths." />
+  <meta name="description" content="Browse the UltraHype marketplace: connected inventory, live commerce sources, categories, real UltraHype trending signals, seller discovery and capability paths." />
   <meta property="og:title" content="UltraHype Marketplace — Search, browse, discover" />
-  <meta property="og:description" content="Search when you know what you want. Browse when you want to discover what products can become." />
+  <meta property="og:description" content="Search connected inventory, browse marketplace categories, follow real UltraHype activity and jump into live commerce sources." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://ultrahype.store/marketplace.html" />
   <link rel="canonical" href="https://ultrahype.store/marketplace.html" />
@@ -16,6 +16,44 @@
   <link rel="stylesheet" href="marketplace.css" />
   <link rel="stylesheet" href="marketplace-home.css" />
   <title>UltraHype Marketplace — Search, browse, discover</title>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "UltraHype Marketplace",
+    "url": "https://ultrahype.store/marketplace.html",
+    "description": "Search and browse connected marketplace inventory, live commerce sources, categories, seller discovery, product activity and UltraHype opportunity layers.",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "UltraHype",
+      "url": "https://ultrahype.store/"
+    },
+    "about": [
+      "online marketplace",
+      "product discovery",
+      "live shopping",
+      "connected commerce",
+      "ecommerce"
+    ],
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "UltraHype",
+          "item": "https://ultrahype.store/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Marketplace",
+          "item": "https://ultrahype.store/marketplace.html"
+        }
+      ]
+    }
+  }
+  </script>
 </head>
 <body class="marketplace-page">
   <div class="noise" aria-hidden="true"></div>
@@ -34,7 +72,8 @@
     <nav id="marketplace-nav" class="site-nav" aria-label="Marketplace navigation">
       <a href="#trending">Trending</a>
       <a href="#categories">Categories</a>
-      <a href="#live">Viewing now</a>
+      <a href="#live-marketplace">Live</a>
+      <a href="#viewing">Viewing now</a>
       <a href="#sellers">Sellers</a>
       <a href="#connected">Connected inventory</a>
       <a class="nav-pill" href="index.html">UltraHype home</a>
@@ -86,7 +125,57 @@
       </div>
     </section>
 
-    <section id="live" class="marketplace-section shell live-marketplace-section">
+    <section id="live-marketplace" class="marketplace-section shell live-commerce-section">
+      <div class="marketplace-section-head">
+        <div><span class="kicker"><span class="live-source-dot"></span> LIVE MARKETPLACE</span><h2>Shop where commerce is happening now.</h2></div>
+        <p>UltraHype can connect live-commerce sources without pretending every provider exposes the same data. Live status and viewer metrics stay attributed to the platform that actually supplies them.</p>
+      </div>
+      <div class="live-commerce-grid">
+        <article class="live-source-card ebay-live-card">
+          <div class="live-source-top"><span class="live-source-badge">LIVE SOURCE</span><span>eBay</span></div>
+          <div class="live-source-visual">
+            <div class="live-source-orbit one"></div><div class="live-source-orbit two"></div>
+            <strong>eBay Live</strong><span>Seller-hosted livestream shopping</span>
+          </div>
+          <div class="live-source-body">
+            <h3>Live sellers, auctions and product shows.</h3>
+            <p>eBay Live is the official source for its current seller streams. eBay does not currently document a public Live directory/viewer-count API for us to reproduce that rail reliably inside UltraHype.</p>
+            <div class="live-source-meta"><span>Current streams: source-controlled</span><span>Viewer count: source UI</span></div>
+            <a href="https://www.ebay.com/eBayLive" target="_blank" rel="noopener noreferrer">Open eBay Live ↗</a>
+          </div>
+        </article>
+
+        <article class="live-source-card youtube-live-card">
+          <div class="live-source-top"><span class="live-source-badge api">API READY</span><span>YouTube</span></div>
+          <div class="live-source-visual youtube">
+            <div class="live-play">▶</div>
+            <strong>YouTube Live Shopping</strong><span>Live video + tagged products</span>
+          </div>
+          <div class="live-source-body">
+            <h3>A live feed we can connect cleanly.</h3>
+            <p>YouTube's Data API can discover active broadcasts and can return the current concurrent viewer count when the creator has not hidden it. Shopping-enabled streams can feature tagged products on YouTube.</p>
+            <div class="live-source-meta"><span>Live discovery: API supported</span><span>Concurrent viewers: when exposed</span></div>
+            <a href="https://www.youtube.com/results?search_query=live+shopping" target="_blank" rel="noopener noreferrer">Explore YouTube live shopping ↗</a>
+          </div>
+        </article>
+
+        <article class="live-source-card ultrahype-live-card">
+          <div class="live-source-top"><span class="live-source-badge future">NEXT LANE</span><span>UltraHype</span></div>
+          <div class="live-source-visual ultrahype">
+            <span class="brand-glyph" aria-hidden="true">UH</span>
+            <strong>UltraHype Live</strong><span>Native shows, premieres and product stories</span>
+          </div>
+          <div class="live-source-body">
+            <h3>Our own live-commerce layer comes later.</h3>
+            <p>This lane is reserved for native UltraHype broadcasts, premieres and clearly labeled studio experiences. We can circle back to the video architecture after the marketplace foundation is mature.</p>
+            <div class="live-source-meta"><span>Native feed: staged</span><span>Metrics: UltraHype-owned</span></div>
+            <a class="disabled-live-link" href="#viewing">See the current UltraHype activity signal ↓</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="viewing" class="marketplace-section shell live-marketplace-section">
       <div class="marketplace-section-head">
         <div><span class="kicker">VIEWING RECENTLY</span><h2>The marketplace has a pulse.</h2></div>
         <p>This is an UltraHype signal: unique anonymous sessions that opened connected item pages during the recent window. It is not an eBay-wide viewer count.</p>
