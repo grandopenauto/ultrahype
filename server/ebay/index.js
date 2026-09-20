@@ -113,6 +113,20 @@ async function getApplicationToken() {
   return tokenCache.token;
 }
 
+function isPrivateHostname(hostname) {
+  const host = String(hostname || '').toLowerCase().replace(/^\[|\]$/g, '');
+  if (!host) return true;
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return true;
+  if (host === '::1' || host.startsWith('fe80:') || host.startsWith('fc') || host.startsWith('fd')) return true;
+  if (/^(127\.|10\.|192\.168\.|169\.254\.)/.test(host)) return true;
+  const private172 = host.match(/^172\.(\d{1,3})\./);
+  if (private172) {
+    const second = Number(private172[1]);
+    if (second >= 16 && second <= 31) return true;
+  }
+  return false;
+}
+
 function normalizeImageUrl(value) {
   if (!value) return null;
   try {
@@ -120,7 +134,8 @@ function normalizeImageUrl(value) {
     if (url.protocol === 'http:' && (url.hostname === 'i.ebayimg.com' || url.hostname.endsWith('.ebayimg.com'))) {
       url.protocol = 'https:';
     }
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null;
+    if (url.protocol !== 'https:' || isPrivateHostname(url.hostname)) return null;
+    return url.href;
   } catch {
     return null;
   }
@@ -232,7 +247,7 @@ app.get('/health', (_req, res) => {
   res.json({
     ok: true,
     service: 'ultrahype-ebay-gateway',
-    version: '0.3.1',
+    version: '0.3.2',
     environment: EBAY_ENV,
     marketplace: MARKETPLACE
   });
