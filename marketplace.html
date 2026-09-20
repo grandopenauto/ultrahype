@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#07070a" />
+  <meta name="description" content="Browse the UltraHype marketplace: connected inventory, categories, real UltraHype trending signals, seller discovery and capability paths." />
+  <meta property="og:title" content="UltraHype Marketplace — Search, browse, discover" />
+  <meta property="og:description" content="Search when you know what you want. Browse when you want to discover what products can become." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ultrahype.store/marketplace.html" />
+  <link rel="canonical" href="https://ultrahype.store/marketplace.html" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="v2.css" />
+  <link rel="stylesheet" href="marketplace.css" />
+  <link rel="stylesheet" href="marketplace-home.css" />
+  <title>UltraHype Marketplace — Search, browse, discover</title>
+</head>
+<body class="marketplace-page">
+  <div class="noise" aria-hidden="true"></div>
+  <div class="orb orb-a" aria-hidden="true"></div>
+  <div class="orb orb-b" aria-hidden="true"></div>
+
+  <header class="site-header shell marketplace-header">
+    <a class="brand" href="index.html" aria-label="UltraHype home">
+      <span class="brand-glyph" aria-hidden="true">UH</span>
+      <span class="brand-word">ULTRAHYPE</span>
+    </a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="marketplace-nav">
+      <span class="sr-only">Toggle navigation</span>
+      <span></span><span></span><span></span>
+    </button>
+    <nav id="marketplace-nav" class="site-nav" aria-label="Marketplace navigation">
+      <a href="#trending">Trending</a>
+      <a href="#categories">Categories</a>
+      <a href="#live">Viewing now</a>
+      <a href="#sellers">Sellers</a>
+      <a href="#connected">Connected inventory</a>
+      <a class="nav-pill" href="index.html">UltraHype home</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="marketplace-hero shell">
+      <div class="marketplace-hero-copy">
+        <div class="eyebrow"><span class="live-dot"></span> ULTRAHYPE MARKETPLACE · DISCOVERY LAYER</div>
+        <h1>Search when you know.<br /><span>Browse when you don't.</span></h1>
+        <p>Find a specific item, move through clean connected inventory, explore real marketplace categories, see what UltraHype visitors are actually looking at, and open the opportunity layer around any product.</p>
+        <div class="marketplace-search-shell">
+          <label for="marketplace-search">Search connected inventory</label>
+          <div class="marketplace-search-row">
+            <input id="marketplace-search" type="search" placeholder="Try tools, cars, shoes, cameras, 3D printers…" autocomplete="off" />
+            <button id="marketplace-search-btn" type="button">Search</button>
+          </div>
+          <div class="marketplace-search-meta"><span id="marketplace-provider">eBay connector</span><span id="marketplace-environment">Checking environment…</span></div>
+        </div>
+      </div>
+
+      <aside class="marketplace-hero-panel">
+        <span class="kicker">HOW TO USE ULTRAHYPE</span>
+        <div class="marketplace-mode"><strong>SEARCH</strong><span>Go directly after the product you have in mind.</span></div>
+        <div class="marketplace-mode"><strong>BROWSE</strong><span>Move through categories, sellers and connected discovery signals.</span></div>
+        <div class="marketplace-mode"><strong>ULTRAHYPE IT</strong><span>Open the product layer and explore what else the item can become.</span></div>
+        <div class="marketplace-mode"><strong>FOLLOW THE SIGNAL</strong><span>Trending and viewer counts use UltraHype activity, not invented popularity.</span></div>
+      </aside>
+    </section>
+
+    <section id="trending" class="marketplace-section shell">
+      <div class="marketplace-section-head">
+        <div><span class="kicker">TRENDING ON ULTRAHYPE</span><h2>What people are actually opening.</h2></div>
+        <p>Ranked from real UltraHype item-detail activity. When there isn't enough activity yet, this section says so rather than manufacturing a trend.</p>
+      </div>
+      <div id="trending-grid" class="marketplace-rail" aria-live="polite">
+        <div class="marketplace-empty">Building the first real UltraHype trend signal…</div>
+      </div>
+    </section>
+
+    <section id="categories" class="marketplace-section shell">
+      <div class="marketplace-section-head">
+        <div><span class="kicker">SHOP BY CATEGORY</span><h2>Browse the marketplace from the top down.</h2></div>
+        <p>Category tiles are loaded from the connected marketplace taxonomy. Choose one and UltraHype applies the same clean-result filter used by specific search.</p>
+      </div>
+      <div id="marketplace-categories" class="marketplace-category-grid" aria-live="polite">
+        <div class="marketplace-empty">Loading marketplace categories…</div>
+      </div>
+    </section>
+
+    <section id="live" class="marketplace-section shell live-marketplace-section">
+      <div class="marketplace-section-head">
+        <div><span class="kicker">VIEWING RECENTLY</span><h2>The marketplace has a pulse.</h2></div>
+        <p>This is an UltraHype signal: unique anonymous sessions that opened connected item pages during the recent window. It is not an eBay-wide viewer count.</p>
+      </div>
+      <div id="live-grid" class="marketplace-rail" aria-live="polite">
+        <div class="marketplace-empty">No recent connected-item views yet.</div>
+      </div>
+    </section>
+
+    <section id="sellers" class="marketplace-section shell">
+      <div class="marketplace-section-head">
+        <div><span class="kicker">SELLER SPOTLIGHT</span><h2>Follow attention back to the source.</h2></div>
+        <p>Sellers appear here when connected items from their inventory are actually being explored on UltraHype. We call this attention, not seller online status.</p>
+      </div>
+      <div id="seller-grid" class="seller-spotlight-grid" aria-live="polite">
+        <div class="marketplace-empty">Seller attention will appear as connected items are explored.</div>
+      </div>
+    </section>
+
+    <section class="marketplace-section shell">
+      <div class="marketplace-section-head">
+        <div><span class="kicker">FRESH CONNECTED DISCOVERIES</span><h2>A useful starting point before trend data matures.</h2></div>
+        <p>These are clean connected items surfaced for discovery. They are deliberately labeled as fresh discoveries, not as trending.</p>
+      </div>
+      <div id="fresh-grid" class="marketplace-rail" aria-live="polite">
+        <div class="marketplace-empty">Scanning a small connected discovery mix…</div>
+      </div>
+    </section>
+
+    <section id="connected" class="marketplace-section shell connected-marketplace-shell">
+      <div class="marketplace-section-head">
+        <div><span class="kicker">CONNECTED INVENTORY</span><h2 id="results-title">Search the network.</h2></div>
+        <p id="results-copy">Specific search remains direct and intentional. UltraHype scans source results, rejects incomplete records, and keeps loading clean listings as long as the source has more.</p>
+      </div>
+      <div id="marketplace-results" class="market-result marketplace-full-results" aria-live="polite">
+        <span>Ready</span><p>Search above or choose a category to begin.</p>
+      </div>
+    </section>
+
+    <section class="marketplace-section shell marketplace-future">
+      <div>
+        <span class="kicker">THE MARKETPLACE GETS SMARTER FROM HERE</span>
+        <h2>Products become relationships.</h2>
+        <p>Connected inventory can eventually feed HypeStacks, FSHackability, collection intelligence, business-launch paths, member listings and additional marketplace connectors without changing the core browsing experience.</p>
+      </div>
+      <div class="marketplace-future-flow">
+        <span>PRODUCT</span><i>→</i><span>DETAIL</span><i>→</i><span>OPPORTUNITY</span><i>→</i><span>SOURCE / HYPESTACK / FSHACK</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer shell">
+    <a class="brand" href="index.html"><span class="brand-glyph">UH</span><span class="brand-word">ULTRAHYPE</span></a>
+    <p>© <span id="year"></span> UltraHype. Connected marketplace data remains source-attributed.</p>
+    <span class="footer-status"><i></i> MARKETPLACE ONLINE</span>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="marketplace.js"></script>
+</body>
+</html>
