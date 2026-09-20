@@ -2,6 +2,13 @@ name: UltraHype Market Memory
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/generate-market-memory.mjs'
+      - '.github/workflows/market-memory.yml'
+      - 'config.js'
+      - 'market-memory.js'
   schedule:
     - cron: '17 8 * * *'
 
@@ -17,10 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ULTRAHYPE_API_BASE: https://api.ultrahype.store
-      # Keep generated connected-market pages out of search until production
-      # inventory is verified. Change to production only after the production
-      # Buy API preflight succeeds.
-      ULTRAHYPE_MARKET_ENV: sandbox
+      ULTRAHYPE_MARKET_ENV: production
     steps:
       - name: Checkout
         uses: actions/checkout@v4
