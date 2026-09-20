@@ -3,6 +3,11 @@ const root = document.getElementById('market-item-root');
 const params = new URLSearchParams(window.location.search);
 const itemId = params.get('id') || '';
 const sourceQuery = params.get('q') || '';
+const sourceCategoryId = params.get('category_id') || '';
+const sourceCategoryName = params.get('category_name') || '';
+const sourceSeller = params.get('seller') || '';
+const sourceContextLabel = sourceQuery || sourceCategoryName || sourceSeller || 'connected';
+const apiBase = String(config.apiBase || '').replace(/\/$/, '');
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -40,12 +45,49 @@ function formatDate(value) {
   return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
+function getSessionId() {
+  const key = 'ultrahype.activity-session';
+  try {
+    const existing = sessionStorage.getItem(key);
+    if (existing) return existing;
+    const generated = crypto.randomUUID ? crypto.randomUUID() : `uh-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    sessionStorage.setItem(key, generated);
+    return generated;
+  } catch {
+    return `uh-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+}
+
+const activitySessionId = getSessionId();
+
+function sendItemView(item) {
+  if (!apiBase || !item?.id) return;
+  fetch(`${apiBase}/api/commerce/activity/event`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({
+      type: 'item_view',
+      sessionId: activitySessionId,
+      itemId: item.id,
+      title: item.title || null,
+      imageUrl: item.imageUrl || item.image || null,
+      price: item.price || null,
+      condition: item.condition || null,
+      seller: item.seller?.username || null,
+      query: sourceQuery || null,
+      categoryId: sourceCategoryId || item.categoryId || null,
+      categoryName: sourceCategoryName || null
+    }),
+    keepalive: true
+  }).catch(() => {});
+}
+
 function cacheKey(id) {
   return `ultrahype.market-item.${id}`;
 }
 
-function browseContextKey(query) {
-  return `ultrahype.market-browse.${String(query || '').trim().toLowerCase()}`;
+function browseContextKey(label = sourceContextLabel) {
+  return `ultrahype.market-browse.${String(label || 'connected').trim().toLowerCase()}`;
 }
 
 function readCachedItem(id) {
@@ -72,15 +114,14 @@ function writeCachedItem(item) {
   } catch {}
 }
 
-function readBrowseContext(query) {
-  if (!query) return null;
+function readBrowseContext(label = sourceContextLabel) {
   try {
-    const raw = sessionStorage.getItem(browseContextKey(query));
+    const raw = sessionStorage.getItem(browseContextKey(label));
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     const age = Date.now() - Number(parsed?.savedAt || 0);
     if (!parsed || !Array.isArray(parsed.items) || (Number.isFinite(age) && age > 30 * 60 * 1000)) {
-      sessionStorage.removeItem(browseContextKey(query));
+      sessionStorage.removeItem(browseContextKey(label));
       return null;
     }
     return parsed;
@@ -89,37 +130,42 @@ function readBrowseContext(query) {
   }
 }
 
-function writeBrowseContext(query, items) {
-  if (!query || !Array.isArray(items) || !items.length) return null;
+function writeBrowseContext(items) {
+  if (!Array.isArray(items) || !items.length) return null;
   const cleanItems = items.filter((item) => item?.id);
   cleanItems.forEach(writeCachedItem);
   const context = {
-    query,
-    items: cleanItems.map((item) => ({
-      id: String(item.id),
-      title: item.title || 'Connected item'
-    })),
+    query: sourceQuery,
+    categoryId: sourceCategoryId,
+    categoryName: sourceCategoryName,
+    seller: sourceSeller,
+    items: cleanItems.map((item) => ({ id: String(item.id), title: item.title || 'Connected item' })),
     savedAt: Date.now()
   };
   try {
-    sessionStorage.setItem(browseContextKey(query), JSON.stringify(context));
+    sessionStorage.setItem(browseContextKey(), JSON.stringify(context));
   } catch {}
   return context;
 }
 
-function detailUrl(id, query = sourceQuery) {
+function detailUrl(id) {
   const nextParams = new URLSearchParams({ id: String(id) });
-  if (query) nextParams.set('q', query);
+  if (sourceQuery) nextParams.set('q', sourceQuery);
+  if (sourceCategoryId) nextParams.set('category_id', sourceCategoryId);
+  if (sourceCategoryName) nextParams.set('category_name', sourceCategoryName);
+  if (sourceSeller) nextParams.set('seller', sourceSeller);
   return `market-item.html?${nextParams.toString()}`;
 }
 
-async function fetchSearchItems(query, limit = 8) {
+async function fetchSearchItems(limit = 12) {
   const ebay = config.integrations?.ebay;
-  const apiBase = String(config.apiBase || '').replace(/\/$/, '');
-  if (!query || !ebay?.enabled || !apiBase || !ebay.searchPath) return [];
+  if (!ebay?.enabled || !apiBase || !ebay.searchPath) return [];
+  if (!sourceQuery && !sourceCategoryId && !sourceSeller) return [];
 
   const url = new URL(`${apiBase}${ebay.searchPath}`);
-  url.searchParams.set('q', query);
+  if (sourceQuery) url.searchParams.set('q', sourceQuery);
+  if (sourceCategoryId) url.searchParams.set('category_id', sourceCategoryId);
+  if (sourceSeller) url.searchParams.set('seller', sourceSeller);
   url.searchParams.set('limit', String(limit));
   const response = await fetch(url, { headers: { Accept: 'application/json' } });
   if (!response.ok) return [];
@@ -127,21 +173,34 @@ async function fetchSearchItems(query, limit = 8) {
   return Array.isArray(payload.items) ? payload.items : [];
 }
 
-async function recoverFromSearch(id, query) {
-  const items = await fetchSearchItems(query, 8);
+async function recoverFromBrowse(id) {
+  const items = await fetchSearchItems(12);
   if (!items.length) return null;
-  writeBrowseContext(query, items);
+  writeBrowseContext(items);
   return items.find((candidate) => String(candidate.id) === id) || null;
 }
 
-async function ensureBrowseContext(query) {
-  if (!query) return null;
-  const cached = readBrowseContext(query);
+async function recoverFromItemEndpoint(id) {
+  if (!apiBase || !id) return null;
+  try {
+    const response = await fetch(`${apiBase}/api/commerce/ebay/item/${encodeURIComponent(id)}`, { headers: { Accept: 'application/json' } });
+    if (!response.ok) return null;
+    const payload = await response.json();
+    const item = payload?.item || null;
+    if (item) writeCachedItem(item);
+    return item;
+  } catch {
+    return null;
+  }
+}
+
+async function ensureBrowseContext() {
+  const cached = readBrowseContext();
   if (cached?.items?.some((item) => item.id === itemId)) return cached;
   try {
-    const items = await fetchSearchItems(query, 8);
+    const items = await fetchSearchItems(12);
     if (!items.length) return cached;
-    return writeBrowseContext(query, items);
+    return writeBrowseContext(items);
   } catch {
     return cached;
   }
@@ -165,23 +224,23 @@ function renderError(title, message) {
     <span class="kicker">CONNECTED ITEM</span>
     <h1>${escapeHtml(title)}</h1>
     <p>${escapeHtml(message)}</p>
-    <div class="hero-actions"><a class="button primary" href="index.html#ebay">Back to connected inventory</a></div>
+    <div class="hero-actions"><a class="button primary" href="marketplace.html#connected">Back to marketplace</a></div>
   </section>`;
 }
 
 function renderSequenceControls(sequence) {
   if (!sequence || sequence.index < 0 || sequence.total < 2) return '';
-
   const previous = sequence.previous;
   const next = sequence.next;
   const previousHref = previous ? detailUrl(previous.id) : '';
   const nextHref = next ? detailUrl(next.id) : '';
+  const contextName = sourceQuery || sourceCategoryName || sourceSeller || 'CONNECTED RESULTS';
 
   return `<nav class="market-sequence" aria-label="Browse connected search results">
     ${previous
       ? `<a class="market-sequence-link prev" href="${escapeHtml(previousHref)}" title="${escapeHtml(previous.title)}"><span class="market-sequence-arrow">←</span><span><small>PREVIOUS</small><strong>${escapeHtml(previous.title)}</strong></span></a>`
       : '<span class="market-sequence-link prev disabled" aria-disabled="true"><span class="market-sequence-arrow">←</span><span><small>PREVIOUS</small><strong>Start of results</strong></span></span>'}
-    <div class="market-sequence-count"><strong>${sequence.index + 1}</strong><span>/</span><strong>${sequence.total}</strong><small>${sourceQuery ? escapeHtml(sourceQuery) : 'CONNECTED RESULTS'}</small></div>
+    <div class="market-sequence-count"><strong>${sequence.index + 1}</strong><span>/</span><strong>${sequence.total}</strong><small>${escapeHtml(contextName)}</small></div>
     ${next
       ? `<a class="market-sequence-link next" href="${escapeHtml(nextHref)}" title="${escapeHtml(next.title)}"><span><small>NEXT</small><strong>${escapeHtml(next.title)}</strong></span><span class="market-sequence-arrow">→</span></a>`
       : '<span class="market-sequence-link next disabled" aria-disabled="true"><span><small>NEXT</small><strong>End of results</strong></span><span class="market-sequence-arrow">→</span></span>'}
@@ -221,7 +280,7 @@ function renderItem(item, browseContext = null) {
     ? `<div class="market-gallery-thumbs">${images.map((src, index) => `<button class="market-gallery-thumb ${index === 0 ? 'active' : ''}" type="button" data-image="${escapeHtml(src)}" aria-label="View image ${index + 1}"><img src="${escapeHtml(src)}" alt="${escapeHtml(item.title || 'Connected item')} image ${index + 1}" loading="lazy" /></button>`).join('')}</div>`
     : '';
 
-  root.innerHTML = `<a class="market-item-back" href="index.html#ebay">← Back to connected inventory</a>
+  root.innerHTML = `<a class="market-item-back" href="marketplace.html#connected">← Back to marketplace</a>
     ${renderSequenceControls(sequence)}
     <section class="market-item-shell">
       <div class="market-gallery">
@@ -291,37 +350,34 @@ function renderItem(item, browseContext = null) {
       if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
       const activeTag = document.activeElement?.tagName?.toLowerCase();
       if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') return;
-      if (event.key === 'ArrowLeft' && sequence.previous) {
-        window.location.href = detailUrl(sequence.previous.id);
-      }
-      if (event.key === 'ArrowRight' && sequence.next) {
-        window.location.href = detailUrl(sequence.next.id);
-      }
+      if (event.key === 'ArrowLeft' && sequence.previous) window.location.href = detailUrl(sequence.previous.id);
+      if (event.key === 'ArrowRight' && sequence.next) window.location.href = detailUrl(sequence.next.id);
     }, { once: false });
   }
+
+  sendItemView(item);
 }
 
 async function init() {
   if (!itemId) {
-    renderError('Item reference missing.', 'Return to connected inventory and open an item from the UltraHype search results.');
+    renderError('Item reference missing.', 'Return to the marketplace and open an item from connected inventory.');
     return;
   }
 
   let item = readCachedItem(itemId);
-  if (!item && sourceQuery) {
-    try {
-      item = await recoverFromSearch(itemId, sourceQuery);
-    } catch {}
+  if (!item && (sourceQuery || sourceCategoryId || sourceSeller)) {
+    try { item = await recoverFromBrowse(itemId); } catch {}
   }
+  if (!item) item = await recoverFromItemEndpoint(itemId);
 
   if (!item) {
-    renderError('This source item could not be resolved.', 'The source listing may have changed, ended, or the local item cache may have expired. Return to connected inventory and run the search again.');
+    renderError('This source item could not be resolved.', 'The source listing may have changed, ended, or become unavailable. Return to the marketplace and browse again.');
     return;
   }
 
-  let browseContext = readBrowseContext(sourceQuery);
-  if (sourceQuery && (!browseContext || !browseContext.items?.some((candidate) => candidate.id === String(item.id)))) {
-    browseContext = await ensureBrowseContext(sourceQuery);
+  let browseContext = readBrowseContext();
+  if ((sourceQuery || sourceCategoryId || sourceSeller) && (!browseContext || !browseContext.items?.some((candidate) => candidate.id === String(item.id)))) {
+    browseContext = await ensureBrowseContext();
   }
 
   renderItem(item, browseContext);
