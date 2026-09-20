@@ -94,7 +94,8 @@ async function getApplicationToken() {
       Authorization: `Basic ${basic}`,
       'Content-Type': 'application/x-www-form-urlencoded'
     },
-    body
+    body,
+    signal: AbortSignal.timeout(15_000)
   });
 
   const payload = await response.json().catch(() => ({}));
@@ -127,10 +128,10 @@ function normalizeImageUrl(value) {
 
 function imageCandidates(item) {
   const candidates = [
-    item.image?.imageUrl,
-    item.primaryItemGroup?.itemGroupImage?.imageUrl,
-    ...(Array.isArray(item.additionalImages) ? item.additionalImages.map((x) => x?.imageUrl) : []),
-    ...(Array.isArray(item.primaryItemGroup?.itemGroupAdditionalImages)
+    item?.image?.imageUrl,
+    item?.primaryItemGroup?.itemGroupImage?.imageUrl,
+    ...(Array.isArray(item?.additionalImages) ? item.additionalImages.map((x) => x?.imageUrl) : []),
+    ...(Array.isArray(item?.primaryItemGroup?.itemGroupAdditionalImages)
       ? item.primaryItemGroup.itemGroupAdditionalImages.map((x) => x?.imageUrl)
       : [])
   ];
@@ -180,40 +181,44 @@ async function getItemDetail(itemId, token) {
   const cached = detailCache.get(itemId);
   if (cached && cached.expiresAt > Date.now()) return cached.payload;
 
-  const response = await fetch(`${ITEM_URL}/${encodeURIComponent(itemId)}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
-      Accept: 'application/json'
-    }
-  });
+  try {
+    const response = await fetch(`${ITEM_URL}/${encodeURIComponent(itemId)}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
+        Accept: 'application/json'
+      },
+      signal: AbortSignal.timeout(12_000)
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      detailCache.set(itemId, { payload: null, expiresAt: Date.now() + 60_000 });
+      return null;
+    }
+
+    const payload = await response.json().catch(() => null);
+    detailCache.set(itemId, {
+      payload,
+      expiresAt: Date.now() + DETAIL_CACHE_SECONDS * 1000
+    });
+    return payload;
+  } catch {
     detailCache.set(itemId, { payload: null, expiresAt: Date.now() + 60_000 });
     return null;
   }
-
-  const payload = await response.json().catch(() => null);
-  detailCache.set(itemId, {
-    payload,
-    expiresAt: Date.now() + DETAIL_CACHE_SECONDS * 1000
-  });
-  return payload;
 }
 
 async function enrichSummary(summary, token) {
   if (!summary || isExpired(summary)) return null;
 
   let source = summary;
-  const summaryImages = imageCandidates(summary);
-  const needsDetail = summaryImages.length === 0;
-
-  if (needsDetail && summary.itemId) {
+  if (imageCandidates(summary).length === 0 && summary.itemId) {
     const detail = await getItemDetail(summary.itemId, token);
     if (detail) source = { ...summary, ...detail };
   }
 
   if (isExpired(source) || isUnavailable(source)) return null;
+  if (imageCandidates(source).length === 0) return null;
   return normalizeItem(source);
 }
 
@@ -227,7 +232,7 @@ app.get('/health', (_req, res) => {
   res.json({
     ok: true,
     service: 'ultrahype-ebay-gateway',
-    version: '0.3.0',
+    version: '0.3.1',
     environment: EBAY_ENV,
     marketplace: MARKETPLACE
   });
@@ -254,6 +259,7 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
     if (!q) return res.status(400).json({ error: 'missing_query' });
 
     const limit = cleanLimit(req.query.limit);
+    const candidateLimit = Math.min(50, Math.max(limit, limit + 4));
     const cacheKey = `${MARKETPLACE}|${q.toLowerCase()}|${limit}`;
     const cached = searchCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
@@ -263,10 +269,8 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
     const token = await getApplicationToken();
     const url = new URL(BROWSE_URL);
     url.searchParams.set('q', q);
-    url.searchParams.set('limit', String(limit));
+    url.searchParams.set('limit', String(candidateLimit));
 
-    // In production, ask eBay to avoid listings already scheduled to have ended.
-    // Sandbox test inventory can contain stale fixtures, so we filter those locally instead.
     if (!isSandbox) {
       url.searchParams.set('filter', `itemEndDate:[${new Date().toISOString()}]`);
     }
@@ -276,7 +280,8 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
         Authorization: `Bearer ${token}`,
         'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
         Accept: 'application/json'
-      }
+      },
+      signal: AbortSignal.timeout(20_000)
     });
 
     const raw = await response.json().catch(() => ({}));
@@ -289,7 +294,8 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
 
     const summaries = Array.isArray(raw.itemSummaries) ? raw.itemSummaries : [];
     const enriched = await Promise.all(summaries.map((item) => enrichSummary(item, token)));
-    const items = enriched.filter(Boolean).slice(0, limit);
+    const validItems = enriched.filter(Boolean);
+    const items = validItems.slice(0, limit);
 
     const payload = {
       provider: 'ebay',
@@ -298,7 +304,8 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
       query: q,
       count: items.length,
       total: Number(raw.total || items.length),
-      filteredOut: Math.max(0, summaries.length - items.length),
+      candidatesChecked: summaries.length,
+      filteredOut: Math.max(0, summaries.length - validItems.length),
       items,
       cached: false,
       fetchedAt: new Date().toISOString()
