@@ -9,6 +9,22 @@ for (const product of catalog.products || []) {
   }
 }
 
+const strapHighTop = catalog.products?.find((item) => item.id === 'shebavonova-strap-high-top');
+if (strapHighTop) {
+  const version = '1749675927';
+  strapHighTop.heroMedia = `https://s0.as-img.com/r/pic/2176854/1500/1500/side.jpg?bg=f5f5f5&u=${version}`;
+  strapHighTop.gallery = [
+    { src: `https://s0.as-img.com/r/pic/2176854/1500/1500/with_box.jpg?bg=f5f5f5&u=${version}`, alt: 'Shebavonova strap high-top with collector box' },
+    { src: `https://s0.as-img.com/r/pic/2176854/1500/1500/over_box.jpg?bg=f5f5f5&u=${version}`, alt: 'Shebavonova strap high-top over-box view' },
+    { src: `https://s0.as-img.com/r/pic/2176854/1500/1500/side.jpg?bg=f5f5f5&u=${version}`, alt: 'Shebavonova strap high-top side view' },
+    { src: `https://s0.as-img.com/r/pic/2176854/1500/1500/double_quarter.jpg?bg=f5f5f5&u=${version}`, alt: 'Shebavonova strap high-top double-quarter view' },
+    { src: `https://s0.as-img.com/r/pic/2176854/1500/1500/top_bottom.jpg?bg=f5f5f5&u=${version}`, alt: 'Shebavonova strap high-top top and sole view' },
+    { src: `https://s0.as-img.com/r/2176854/1200/1200/detail.jpg?bg=f5f5f5&u=${version}`, alt: 'Shebavonova strap high-top detail view' },
+    { src: `https://s0.as-img.com/r/2176854/700/600/tongue.jpg?bg=f5f5f5&u=${version}`, alt: 'Shebavonova strap high-top tongue detail' },
+    { src: `https://s0.as-img.com/r/box/2176854/1000/1000/horizontal.jpg?bg=f5f5f5&u=${version}`, alt: 'Shebavonova collector packaging' }
+  ];
+}
+
 const year = document.getElementById('year');
 const navToggle = document.querySelector('.nav-toggle');
 const nav = document.querySelector('.site-nav');
