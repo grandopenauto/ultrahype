@@ -36,7 +36,7 @@ const ULTRAHYPE_EBAY_TOP_CATEGORIES = Object.freeze([
 ]);
 
 window.ULTRAHYPE_CONFIG = Object.freeze({
-  version: "2.4.0",
+  version: "2.4.1",
   environment: "launch",
   apiBase: "https://api.ultrahype.store",
   marketplacePath: "marketplace.html",
@@ -48,6 +48,7 @@ window.ULTRAHYPE_CONFIG = Object.freeze({
       itemPath: "/api/commerce/ebay/item",
       categoriesPath: "/api/commerce/ebay/categories",
       intelligencePath: "/api/commerce/intelligence/discovery",
+      affiliateDisclosure: "As an eBay Partner, UltraHype may be compensated if you make a purchase.",
       fallbackCategories: ULTRAHYPE_EBAY_TOP_CATEGORIES
     },
     activity: {
@@ -169,4 +170,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const pill = nav.querySelector('.nav-pill');
   if (pill) nav.insertBefore(link, pill);
   else nav.appendChild(link);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const root = document.getElementById('market-item-root');
+  const disclosure = window.ULTRAHYPE_CONFIG?.integrations?.ebay?.affiliateDisclosure;
+  if (!root || !disclosure) return;
+
+  const ensureDisclosure = () => {
+    const actions = root.querySelector('.market-item-actions');
+    if (!actions || root.querySelector('.epn-disclosure')) return;
+    const note = document.createElement('p');
+    note.className = 'market-item-caution epn-disclosure';
+    note.textContent = disclosure;
+    actions.insertAdjacentElement('afterend', note);
+  };
+
+  ensureDisclosure();
+  const observer = new MutationObserver(ensureDisclosure);
+  observer.observe(root, { childList: true, subtree: true });
 });
