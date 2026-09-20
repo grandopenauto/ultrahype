@@ -1,0 +1,223 @@
+window.ULTRAHYPE_CATALOG = Object.freeze({
+  version: "2.0.0",
+  products: [
+    {
+      id: "shebavonova-strap-high-top",
+      brand: "Shebavonova",
+      name: "Italian Strap High-Top",
+      type: "physical",
+      category: "Footwear",
+      theme: "shebavonova",
+      badge: "HANDCRAFTED IN ITALY",
+      headline: "Statement-making, 90s-inspired strap high-tops built from pristine Italian leather.",
+      description: "Limited edition, made to order. Premium craftsmanship meets bold basketball DNA with an oversized tongue, wide forefoot strap, and embossed details.",
+      price: { value: 265, currency: "USD", label: "$265" },
+      checkout: {
+        label: "Buy on AliveShoes — $265",
+        url: "https://www.aliveshoes.com/shebavonova-2?utm_source=ultrahype&utm_medium=marketplace&utm_campaign=shebavonova_launch",
+        note: "Checkout is handled by AliveShoes."
+      },
+      heroMedia: "https://s0.as-img.com/r/pic/2176854/1500/1500/side.jpg?bg=f5f5f5",
+      gallery: [
+        { src: "https://s0.as-img.com/r/pic/2176854/1500/1500/side.jpg?bg=f5f5f5", alt: "Shebavonova strap high-top side view" },
+        { src: "https://s0.as-img.com/r/pic/2176854/1500/1500/overbox.jpg?bg=f5f5f5", alt: "Shebavonova strap high-top over-box view" },
+        { src: "https://s0.as-img.com/r/pic/2176854/1500/1500/top.jpg?bg=f5f5f5", alt: "Shebavonova strap high-top top view" },
+        { src: "https://s0.as-img.com/r/pic/2176854/1500/1500/detail.jpg?bg=f5f5f5", alt: "Shebavonova strap high-top detail view" },
+        { src: "https://s0.as-img.com/r/pic/2176854/1500/1500/box.jpg?bg=f5f5f5", alt: "Shebavonova collector box" }
+      ],
+      highlights: [
+        "Free express shipping to US, EU, UK & CA",
+        "30-day free returns",
+        "Zero US tariffs",
+        "Made to order in 6–12 business days"
+      ],
+      valueProps: [
+        ["Italian Craft", "Made in Le Marche by master artisans using pristine Italian leather."],
+        ["Limited Edition", "A protected limited-edition design with premium collector presentation."],
+        ["Risk-Free Fit", "30-day free returns if the fit is not right or you change your mind."],
+        ["Express Delivery", "Typical delivery is about 3–8 business days after production and shipment."]
+      ],
+      storyTitle: "Why Shebavonova?",
+      story: "A bold strap high-top that channels 90s court energy into everyday luxury. The wide strap, oversized tongue and sculpted cupsole make the silhouette unmistakable without turning it into costume.",
+      features: ["Wide forefoot strap plus classic lacing", "Oversized tongue with logo emboss", "Durable cupsole designed for everyday wear"],
+      faq: [
+        ["Shipping", "Free express shipping to the US, EU, UK and Canada. Worldwide delivery is handled by major express carriers."],
+        ["Returns", "30-day free returns. Shoes should be unworn and in original condition."],
+        ["Production", "Made to order in 6–12 business days, then typically delivered in about 3–8 business days."]
+      ],
+      intelligence: { status: "pending", modes: ["FSHackability", "HypeStack compatibility", "Collection relationships"] }
+    },
+    {
+      id: "shebavonova-spike-low-top",
+      brand: "Shebavonova",
+      name: "Spike Fashion Low-Top",
+      type: "physical",
+      category: "Footwear",
+      theme: "shebavonova",
+      badge: "LIMITED EDITION · VT8719",
+      headline: "Bold, rock-inspired low-tops with metal spikes, buckle and forefoot strap.",
+      description: "Limited edition, made to order. Premium Italian leather, classic lacing, metal accents and a logo-embossed tongue create a standout streetwear silhouette.",
+      price: { value: 265, currency: "USD", label: "$265" },
+      checkout: {
+        label: "Buy on AliveShoes — $265",
+        url: "https://www.aliveshoes.com/shebavonova-3?utm_source=ultrahype&utm_medium=marketplace&utm_campaign=shebavonova3_launch",
+        note: "Checkout is handled by AliveShoes."
+      },
+      heroMedia: "https://s0.as-img.com/r/pic/2176867/1500/1500/side.jpg?bg=f5f5f5",
+      gallery: [
+        { src: "https://s0.as-img.com/r/pic/2176867/1500/1500/side.jpg?bg=f5f5f5", alt: "Shebavonova spike low-top side view" },
+        { src: "https://s0.as-img.com/r/pic/2176867/1500/1500/over_box.jpg?bg=f5f5f5", alt: "Shebavonova spike low-top over-box view" },
+        { src: "https://s0.as-img.com/r/pic/2176867/1500/1500/with_box.jpg?bg=f5f5f5", alt: "Shebavonova spike low-top with box" },
+        { src: "https://s0.as-img.com/r/pic/2176867/1500/1500/top_bottom.jpg?bg=f5f5f5", alt: "Shebavonova spike low-top top and bottom view" },
+        { src: "https://s0.as-img.com/r/box/2176867/1000/1000/horizontal.jpg?bg=f5f5f5", alt: "Shebavonova collector packaging" }
+      ],
+      highlights: ["Free express shipping to US, EU, UK & CA", "30-day free returns", "Zero US tariffs", "Protected design · Code #VT8719"],
+      valueProps: [
+        ["Italian Craft", "Made by master artisans using pristine Italian leather."],
+        ["Collector Design", "Protected limited-edition design with official code #VT8719."],
+        ["Risk-Free Fit", "30-day free returns with satisfaction protection."],
+        ["Made to Order", "Produced in 6–12 business days and shipped express worldwide."]
+      ],
+      storyTitle: "Design DNA",
+      story: "Classic court lines meet rock influences. A metal buckle and heel/strap spikes add edge while the forefoot strap and lacing provide structure. The oversized tongue carries the Shebavonova mark.",
+      features: ["Metal spikes on heel cap and strap", "Metal buckle plus front lacing with eyelets", "Logo tongue and durable cupsole"],
+      faq: [
+        ["Shipping", "Free express shipping to Europe, the UK, Canada and the USA."],
+        ["Returns", "30-day free returns with satisfaction protection."],
+        ["Production", "Made to order in 6–12 business days, with typical delivery about 3–8 business days after shipment."]
+      ],
+      intelligence: { status: "pending", modes: ["FSHackability", "HypeStack compatibility", "Collection relationships"] }
+    },
+    {
+      id: "dcd-intake-lane",
+      brand: "Digital Cross Dock",
+      name: "Intake Lane",
+      type: "software",
+      category: "Infrastructure",
+      theme: "dcd",
+      badge: "CUSTOMER + FORM INTAKE",
+      headline: "Stop unloading public traffic directly into the systems that run your business.",
+      description: "Receive forms, applications, onboarding packets and service requests through a replaceable intake layer. Stage every submission, create a traceable manifest, then deliver approved work downstream at a pace your operation can safely handle.",
+      price: null,
+      checkout: { label: "Explore Digital Cross Dock", url: "https://digitalcrossdock.com/", note: "Deployment scope and pricing are defined around the operating lane." },
+      highlights: ["Replaceable public edge", "Traceable manifests", "Controlled delivery", "Protected backend"],
+      valueProps: [
+        ["Receive", "Accept customer work without exposing the operational core."],
+        ["Stage", "Preserve payloads and create a controlled holding state before processing."],
+        ["Route", "Classify work and send it only to approved destinations."],
+        ["Deliver", "Move work downstream according to policy and capacity."]
+      ],
+      storyTitle: "Built for uneven demand",
+      story: "Public traffic can arrive in bursts. The Intake Lane separates arrival from downstream processing so the customer-facing edge can stay responsive while protected systems work at their own safe pace.",
+      features: ["Customer and lead forms", "Applications and onboarding", "Service requests", "Agent-ready intake", "Manifest state tracking"],
+      faq: [["Best fit", "Forms, applications, onboarding packets, customer requests and lead intake."], ["Deployment", "Start lightweight, then upgrade the infrastructure beneath the same operating contract as volume grows."], ["Security model", "Public-facing intake remains separate from protected backend authority and credentials."]],
+      intelligence: { status: "capability", modes: ["BusinessOS pairing", "Agent workflow compatibility", "Operational fit"] }
+    },
+    {
+      id: "dcd-api-event-lane",
+      brand: "Digital Cross Dock",
+      name: "API & Event Lane",
+      type: "software",
+      category: "Infrastructure",
+      theme: "dcd",
+      badge: "APIS · WEBHOOKS · EVENT BURSTS",
+      headline: "Absorb uneven API and event traffic without forcing the backend to run at internet speed.",
+      description: "Create a controlled staging and delivery layer for APIs, webhooks and event bursts. Preserve the work, manifest it, then process and deliver it according to downstream capacity.",
+      price: null,
+      checkout: { label: "Explore Digital Cross Dock", url: "https://digitalcrossdock.com/", note: "Deployment scope and pricing are defined around the operating lane." },
+      highlights: ["Burst absorption", "Asynchronous processing", "Policy-based routing", "Replaceable edge"],
+      valueProps: [["Buffer demand", "Separate arrival rate from processing rate."], ["Preserve work", "Keep each event represented by a traceable manifest."], ["Control delivery", "Throttle or sequence work for the destination."], ["Upgrade cleanly", "Move from lightweight staging to durable queues without changing the business contract."]],
+      storyTitle: "Traffic is not capacity",
+      story: "The public internet can spike without warning. The API & Event Lane lets the front door accept work while protected destinations consume it on controlled terms.",
+      features: ["Webhook intake", "API event staging", "Burst handling", "Worker handoff", "Retry and exception-ready architecture"],
+      faq: [["Best fit", "APIs, webhooks, event-heavy integrations and uneven inbound workloads."], ["Scale path", "The operating contract can progress from lightweight staging to durable queue and worker infrastructure."], ["Credentials", "Protected credentials stay server-side and are not exposed to the public intake layer."]],
+      intelligence: { status: "capability", modes: ["Integration fit", "Traffic profile", "Scale path"] }
+    },
+    {
+      id: "dcd-agent-workload-lane",
+      brand: "Digital Cross Dock",
+      name: "Agent Workload Lane",
+      type: "software",
+      category: "Infrastructure",
+      theme: "dcd",
+      badge: "AI AGENTS · AUTOMATION",
+      headline: "Give AI agents a loading dock instead of a public front door.",
+      description: "Stage agent jobs before they reach AI systems, automations or operator-assisted workflows. Preserve intent, apply policy, then release approved work into the right execution lane.",
+      price: null,
+      checkout: { label: "Explore Digital Cross Dock", url: "https://digitalcrossdock.com/", note: "Deployment scope and pricing are defined around the operating lane." },
+      highlights: ["Agent job staging", "Approval boundaries", "Workload routing", "Audit-friendly manifests"],
+      valueProps: [["Separate intake", "Do not make the agent runtime the public endpoint."], ["Apply policy", "Check route, authority and state before execution."], ["Manage load", "Release work according to worker capacity."], ["Observe movement", "Track each workload through manifest states."]],
+      storyTitle: "Controlled autonomy",
+      story: "AI systems are most useful when they can act, but the public edge should not decide when or where that authority is exercised. The Agent Workload Lane inserts a deliberate operating boundary.",
+      features: ["Agent job manifests", "Approval gates", "Operator-assisted queues", "Multi-agent routing", "Exception handling"],
+      faq: [["Best fit", "AI agents, automations, operator-assisted workflows and queued execution."], ["Human control", "The lane can preserve explicit approval and exception states before action."], ["Scale", "Worker pools and stronger queue infrastructure can be introduced as utilization grows."]],
+      intelligence: { status: "capability", modes: ["Agent compatibility", "Approval requirements", "Workload profile"] }
+    },
+    {
+      id: "dcd-partner-integration-lane",
+      brand: "Digital Cross Dock",
+      name: "Partner Integration Lane",
+      type: "software",
+      category: "Infrastructure",
+      theme: "dcd",
+      badge: "PARTNER + PLATFORM HANDOFFS",
+      headline: "Create a controlled handoff between outside platforms and internal operations.",
+      description: "Receive partner payloads at a bounded edge, create a manifest, validate and route the work, then deliver only approved data or actions into protected systems.",
+      price: null,
+      checkout: { label: "Explore Digital Cross Dock", url: "https://digitalcrossdock.com/", note: "Deployment scope and pricing are defined around the operating lane." },
+      highlights: ["Partner boundaries", "Manifested handoffs", "Policy checks", "Controlled destinations"],
+      valueProps: [["Bound the edge", "Give partners a stable public integration surface."], ["Normalize work", "Convert external payloads into a consistent internal manifest."], ["Route intentionally", "Send work only to the approved internal destination."], ["Preserve evidence", "Track what arrived, what changed and where it went."]],
+      storyTitle: "Integrate without surrendering the core",
+      story: "External partners should be able to exchange useful work without becoming tightly coupled to the systems that actually operate the business.",
+      features: ["Partner API intake", "Payload normalization", "Routing policy", "Traceable delivery", "Replaceable connectors"],
+      faq: [["Best fit", "Partner platforms, vendors, outside systems and cross-company workflows."], ["Coupling", "The public integration surface can change independently of the protected operational destination."], ["Observability", "Manifest states provide a traceable history of the handoff."]],
+      intelligence: { status: "capability", modes: ["Partner fit", "Integration complexity", "Routing model"] }
+    },
+    {
+      id: "dcd-legacy-shield",
+      brand: "Digital Cross Dock",
+      name: "Legacy Shield",
+      type: "software",
+      category: "Infrastructure",
+      theme: "dcd",
+      badge: "MODERN EDGE · LEGACY CORE",
+      headline: "Put a modern replaceable edge in front of systems that were never meant to face the public internet.",
+      description: "Use Digital Cross Dock as a staging and routing boundary in front of older, fragile or private systems. Modernize the intake contract without forcing an immediate rewrite of the backend.",
+      price: null,
+      checkout: { label: "Explore Digital Cross Dock", url: "https://digitalcrossdock.com/", note: "Deployment scope and pricing are defined around the operating lane." },
+      highlights: ["Modern public edge", "Legacy isolation", "Controlled translation", "Incremental modernization"],
+      valueProps: [["Protect", "Keep fragile systems away from direct public exposure."], ["Translate", "Normalize modern intake into forms the destination can handle."], ["Throttle", "Match delivery to the legacy system's safe operating pace."], ["Replace", "Upgrade the public layer without rebuilding the operational core."]],
+      storyTitle: "Modernize the boundary first",
+      story: "Not every valuable system needs to be replaced immediately. Legacy Shield lets the business improve the public-facing contract while preserving systems that still do useful work behind the boundary.",
+      features: ["Legacy system buffering", "Payload transformation", "Rate control", "Manifest traceability", "Incremental replacement path"],
+      faq: [["Best fit", "Older applications, private systems and operational tools that should not receive uncontrolled public traffic."], ["Migration", "The shield can remain while backend components are upgraded one at a time."], ["Risk control", "Staging and routing reduce direct coupling between outside traffic and fragile internal services."]],
+      intelligence: { status: "capability", modes: ["Legacy fit", "Modernization path", "Operational dependency"] }
+    },
+    {
+      id: "dcd-managed-dock",
+      brand: "Digital Cross Dock",
+      name: "Managed Dock",
+      type: "service",
+      category: "Infrastructure",
+      theme: "dcd",
+      badge: "MULTI-LANE · MANAGED",
+      headline: "Turn multiple intake and routing lanes into one managed operating boundary.",
+      description: "Combine customer intake, APIs, agent workloads, partner integrations and legacy protection into a coordinated Digital Cross Dock deployment with shared manifests and operating controls.",
+      price: null,
+      checkout: { label: "Explore Digital Cross Dock", url: "https://digitalcrossdock.com/", note: "Managed deployments are scoped around lane count, workload profile and operating requirements." },
+      highlights: ["Multiple lanes", "Shared operating model", "Observability", "Growth path"],
+      valueProps: [["One dock", "Coordinate several public intake patterns behind a shared operating model."], ["Shared manifests", "Keep state and evidence consistent across lanes."], ["Managed controls", "Centralize routing, exceptions and downstream delivery."], ["Grow with load", "Upgrade infrastructure as customer dependency and volume justify it."]],
+      storyTitle: "One boundary, many workloads",
+      story: "The Managed Dock is for organizations that need more than a single intake problem solved. It applies the same receive, stage, manifest, route, control and deliver model across multiple workloads.",
+      features: ["Multi-lane deployment", "Shared manifest states", "Central routing controls", "Monitoring and exception handling", "Scale-up architecture"],
+      faq: [["Best fit", "Businesses operating several public intake, integration or agent workload lanes."], ["Scope", "The deployment is bounded by approved lanes, destinations and operating responsibilities."], ["Growth", "Infrastructure can move from lightweight validation to dedicated queues, workers, isolation and redundancy as demand earns it."]],
+      intelligence: { status: "capability", modes: ["Lane fit", "Operating complexity", "Scale readiness"] }
+    }
+  ],
+  hypeStacks: [
+    { id: "3d-printing-business", name: "3D Printing Business", kicker: "MACHINE + SOFTWARE + BUSINESSOS", description: "Anchor a capability around a 3D printer, then pair it with CATIAAgent, ManufacturingOS, quoting, customer acquisition and operating workflows.", status: "concept" },
+    { id: "window-cleaning-business", name: "Window Cleaning Business", kicker: "TOOLS + VOICE + SEO + OPERATIONS", description: "Start with simple cleaning equipment, then add Voice Agent, SEO Agent, scheduling, quoting and a lightweight BusinessOS.", status: "concept" },
+    { id: "smart-lab", name: "Smart Lab", kicker: "SCIENCE EQUIPMENT + CHEMISTRYOS + LABOS", description: "Match laboratory equipment with ChemistryOS, LabOS agents, experiment logging and analysis workflows.", status: "concept" },
+    { id: "robotics-cell", name: "Robotics Cell", kicker: "ROBOT + AI + AUTOMATION", description: "Pair connected robot hardware with robotics AI, vision/ML utilities and automation workflows.", status: "concept" }
+  ]
+});
