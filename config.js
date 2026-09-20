@@ -1,5 +1,5 @@
 window.ULTRAHYPE_CONFIG = Object.freeze({
-  version: "1.2.1",
+  version: "2.0.0",
   environment: "launch",
   apiBase: "https://api.ultrahype.store",
   integrations: {
@@ -22,8 +22,8 @@ window.ULTRAHYPE_CONFIG = Object.freeze({
       catalogPath: "/api/catalog/fshack"
     },
     shebavonova: {
-      enabled: false,
-      catalogPath: "/api/catalog/shebavonova"
+      enabled: true,
+      catalogPath: "/catalog/shebavonova"
     }
   }
 });
