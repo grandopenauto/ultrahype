@@ -30,7 +30,7 @@ function ensureMarketplaceStyles() {
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = 'marketplace.css';
-  link.dataset.ultrahypeMarketplace = 'v2.1';
+  link.dataset.ultrahypeMarketplace = 'v2.2';
   document.head.appendChild(link);
 }
 ensureMarketplaceStyles();
@@ -47,6 +47,19 @@ const productGrid = document.getElementById('product-grid');
 const categoryTabs = document.getElementById('category-tabs');
 const dcdGrid = document.getElementById('dcd-grid');
 const hypeStackGrid = document.getElementById('hype-stack-grid');
+
+const CLEAN_BATCH_SIZE = 12;
+const marketSearchState = {
+  query: '',
+  items: [],
+  nextOffset: 0,
+  hasMore: false,
+  loading: false,
+  candidatesScanned: 0,
+  filteredOut: 0,
+  sourceTotal: null,
+  retrievableTotal: null
+};
 
 if (year) year.textContent = new Date().getFullYear();
 
@@ -118,13 +131,29 @@ function cacheMarketItem(item) {
   } catch {}
 }
 
+function cacheMarketBrowse(query, items) {
+  if (!query || !Array.isArray(items) || !items.length) return;
+  try {
+    sessionStorage.setItem(
+      `ultrahype.market-browse.${query.trim().toLowerCase()}`,
+      JSON.stringify({
+        query,
+        items: items.filter((item) => item?.id).map((item) => ({ id: String(item.id), title: item.title || 'Connected item' })),
+        nextOffset: marketSearchState.nextOffset,
+        hasMore: marketSearchState.hasMore,
+        savedAt: Date.now()
+      })
+    );
+  } catch {}
+}
+
 function renderProducts(filter = 'all') {
   if (!productGrid) return;
   const items = catalog.products.filter((product) => filter === 'all' || product.type === filter || product.category?.toLowerCase() === filter);
   productGrid.innerHTML = items.map((product) => {
     const isDcd = product.theme === 'dcd';
     const media = isDcd
-      ? `<div class="catalog-media dcd" aria-hidden="true"></div>`
+      ? '<div class="catalog-media dcd" aria-hidden="true"></div>'
       : `<div class="catalog-media"><img src="${escapeHtml(product.heroMedia || '')}" alt="${escapeHtml(product.name)}" loading="lazy" /></div>`;
     const price = product.price?.label || (isDcd ? 'SCOPED DEPLOYMENT' : product.type.toUpperCase());
     return `<article class="catalog-card">
@@ -190,14 +219,16 @@ function initializeMarketConnector() {
     : '<span>Sandbox API lane live</span><p>The protected connector is online with eBay Sandbox test inventory. Production inventory remains disabled until production access is approved and installed.</p>';
 }
 
-function renderEbayCards(items, production, query = '') {
+function renderEbayCards() {
   if (!marketResult) return;
-  const visible = items.slice(0, 8);
-  visible.forEach(cacheMarketItem);
+  const production = ebayMode() === 'production';
+  const items = marketSearchState.items;
+  items.forEach(cacheMarketItem);
+  cacheMarketBrowse(marketSearchState.query, items);
 
-  const cards = visible.map((item, index) => {
+  const cards = items.map((item, index) => {
     const imageUrl = safeExternalUrl(item.imageUrl || item.image);
-    const detailUrl = marketItemUrl(item, query);
+    const detailUrl = marketItemUrl(item, marketSearchState.query);
     const sourceLabel = production ? 'EBAY' : 'EBAY SANDBOX';
     const condition = item.condition || 'Condition not supplied';
     const seller = item.seller?.username ? `Seller: ${item.seller.username}` : condition;
@@ -216,9 +247,18 @@ function renderEbayCards(items, production, query = '') {
     </article>`;
   }).join('');
 
+  const sourceTotal = Number.isFinite(Number(marketSearchState.sourceTotal)) ? Number(marketSearchState.sourceTotal) : null;
+  const retrievableTotal = Number.isFinite(Number(marketSearchState.retrievableTotal)) ? Number(marketSearchState.retrievableTotal) : null;
+  const sourceStat = sourceTotal == null
+    ? ''
+    : ` · ${marketSearchState.candidatesScanned} candidates scanned${retrievableTotal != null && sourceTotal > retrievableTotal ? ` · first ${retrievableTotal.toLocaleString()} retrievable` : ''}`;
+  const loadMore = marketSearchState.hasMore
+    ? `<div class="market-load-more"><button id="market-load-more" type="button" ${marketSearchState.loading ? 'disabled' : ''}>${marketSearchState.loading ? 'Scanning…' : 'Load more clean listings'}</button><small>UltraHype continues after source offset ${marketSearchState.nextOffset ?? 0} and keeps the same quality filter.</small></div>`
+    : (items.length ? '<div class="market-load-more done"><small>End of the clean retrievable results for this search.</small></div>' : '');
+
   marketResult.classList.remove('loading');
   marketResult.classList.add('active', 'market-results-mode');
-  marketResult.innerHTML = `<div class="market-result-head"><span>${production ? 'Connected results' : 'Sandbox results'} · ${items.length} returned</span><small>Images remain source-hosted</small></div>${cards ? `<div class="ebay-result-grid">${cards}</div>` : '<p>No matching items were returned for this query.</p>'}<p class="market-result-note">${production ? 'Open an UltraHype item view first, then continue to the source listing when ready.' : 'Sandbox inventory is test data. UltraHype item views sit between discovery and the eBay Sandbox source listing.'}</p>`;
+  marketResult.innerHTML = `<div class="market-result-head"><span>${production ? 'Connected inventory' : 'Sandbox inventory'} · ${items.length} clean loaded${sourceStat}</span><small>Images remain source-hosted</small></div>${cards ? `<div class="ebay-result-grid">${cards}</div>` : '<p>No listings met the UltraHype clean-result requirements in the scanned range.</p>'}${loadMore}<p class="market-result-note">${production ? 'UltraHype progressively scans source results and keeps only listings with enough reliable information for the connected-item experience.' : 'Sandbox inventory is test data. The same clean-result pipeline is being exercised before production eBay access is enabled.'}</p>`;
 
   marketResult.querySelectorAll('.ebay-card-media img').forEach((img) => {
     img.addEventListener('error', () => {
@@ -226,12 +266,23 @@ function renderEbayCards(items, production, query = '') {
       img.remove();
     }, { once: true });
   });
+
+  document.getElementById('market-load-more')?.addEventListener('click', () => searchEbay({ append: true }));
 }
 
-async function searchEbay() {
-  const query = marketInput?.value.trim();
-  if (!query || !marketResult) {
-    if (marketInput) marketInput.focus();
+function mergeUniqueItems(existing, incoming) {
+  const map = new Map();
+  for (const item of [...existing, ...incoming]) {
+    if (item?.id && !map.has(String(item.id))) map.set(String(item.id), item);
+  }
+  return [...map.values()];
+}
+
+async function searchEbay({ append = false } = {}) {
+  const typedQuery = marketInput?.value.trim() || '';
+  const query = append ? marketSearchState.query : typedQuery;
+  if (!query || !marketResult || marketSearchState.loading) {
+    if (!query && marketInput) marketInput.focus();
     return;
   }
 
@@ -244,22 +295,55 @@ async function searchEbay() {
     return;
   }
 
-  marketResult.classList.remove('market-results-mode');
-  marketResult.classList.add('loading');
-  marketResult.innerHTML = '<span>Searching</span><p>Routing query through the protected marketplace adapter…</p>';
+  if (!append) {
+    marketSearchState.query = query;
+    marketSearchState.items = [];
+    marketSearchState.nextOffset = 0;
+    marketSearchState.hasMore = false;
+    marketSearchState.candidatesScanned = 0;
+    marketSearchState.filteredOut = 0;
+    marketSearchState.sourceTotal = null;
+    marketSearchState.retrievableTotal = null;
+    marketResult.classList.remove('market-results-mode');
+    marketResult.classList.add('loading');
+    marketResult.innerHTML = '<span>Searching</span><p>Scanning marketplace results and filtering for clean connected-item records…</p>';
+  } else {
+    marketSearchState.loading = true;
+    renderEbayCards();
+  }
+
+  marketSearchState.loading = true;
 
   try {
     const url = new URL(`${apiBase}${ebay.searchPath}`);
     url.searchParams.set('q', query);
-    url.searchParams.set('limit', '8');
+    url.searchParams.set('limit', String(CLEAN_BATCH_SIZE));
+    url.searchParams.set('offset', String(append ? (marketSearchState.nextOffset || 0) : 0));
+
     const response = await fetch(url, { headers: { Accept: 'application/json' } });
     if (!response.ok) throw new Error(`Search failed (${response.status})`);
     const payload = await response.json();
-    const items = Array.isArray(payload.items) ? payload.items : [];
-    renderEbayCards(items, ebayMode() === 'production', query);
+    const incoming = Array.isArray(payload.items) ? payload.items : [];
+
+    marketSearchState.items = append ? mergeUniqueItems(marketSearchState.items, incoming) : incoming;
+    marketSearchState.nextOffset = payload.nextOffset ?? null;
+    marketSearchState.hasMore = Boolean(payload.hasMore && payload.nextOffset != null);
+    marketSearchState.candidatesScanned += Number(payload.candidatesChecked || 0);
+    marketSearchState.filteredOut += Number(payload.filteredOut || 0);
+    marketSearchState.sourceTotal = payload.total ?? marketSearchState.sourceTotal;
+    marketSearchState.retrievableTotal = payload.retrievableTotal ?? marketSearchState.retrievableTotal;
+    marketSearchState.loading = false;
+
+    renderEbayCards();
   } catch (error) {
-    marketResult.classList.remove('loading', 'market-results-mode');
-    marketResult.innerHTML = `<span>Connector unavailable</span><p>${escapeHtml(error.message)}. The public storefront remains isolated from marketplace credentials.</p>`;
+    marketSearchState.loading = false;
+    if (append && marketSearchState.items.length) {
+      renderEbayCards();
+      showToast(`Could not load the next clean batch: ${error.message}`);
+    } else {
+      marketResult.classList.remove('loading', 'market-results-mode');
+      marketResult.innerHTML = `<span>Connector unavailable</span><p>${escapeHtml(error.message)}. The public storefront remains isolated from marketplace credentials.</p>`;
+    }
   }
 }
 
@@ -284,7 +368,7 @@ renderHypeStacks();
 initializeMarketConnector();
 wireReveal();
 
-if (marketButton) marketButton.addEventListener('click', searchEbay);
+if (marketButton) marketButton.addEventListener('click', () => searchEbay());
 if (marketInput) marketInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') searchEbay(); });
 
 document.querySelectorAll('[data-toast]').forEach((button) => button.addEventListener('click', () => showToast(button.dataset.toast)));
