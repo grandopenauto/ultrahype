@@ -104,6 +104,20 @@ function productUrl(product) {
   return `product.html?id=${encodeURIComponent(product.id)}`;
 }
 
+function marketItemUrl(item, query = '') {
+  if (!item?.id) return 'index.html#ebay';
+  const params = new URLSearchParams({ id: String(item.id) });
+  if (query) params.set('q', query);
+  return `market-item.html?${params.toString()}`;
+}
+
+function cacheMarketItem(item) {
+  if (!item?.id) return;
+  try {
+    sessionStorage.setItem(`ultrahype.market-item.${item.id}`, JSON.stringify({ item, savedAt: Date.now() }));
+  } catch {}
+}
+
 function renderProducts(filter = 'all') {
   if (!productGrid) return;
   const items = catalog.products.filter((product) => filter === 'all' || product.type === filter || product.category?.toLowerCase() === filter);
@@ -176,46 +190,41 @@ function initializeMarketConnector() {
     : '<span>Sandbox API lane live</span><p>The protected connector is online with eBay Sandbox test inventory. Production inventory remains disabled until production access is approved and installed.</p>';
 }
 
-function renderEbayCards(items, production) {
+function renderEbayCards(items, production, query = '') {
   if (!marketResult) return;
   const visible = items.slice(0, 8);
+  visible.forEach(cacheMarketItem);
+
   const cards = visible.map((item, index) => {
     const imageUrl = safeExternalUrl(item.imageUrl || item.image);
-    const itemUrl = safeExternalUrl(item.itemWebUrl);
+    const detailUrl = marketItemUrl(item, query);
     const sourceLabel = production ? 'EBAY' : 'EBAY SANDBOX';
-    const listingLabel = production ? 'View on eBay' : 'View test listing';
     const condition = item.condition || 'Condition not supplied';
     const seller = item.seller?.username ? `Seller: ${item.seller.username}` : condition;
     const image = imageUrl
       ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.title || `eBay item ${index + 1}`)}" loading="lazy" referrerpolicy="no-referrer" />`
       : '';
-    const sourceAction = itemUrl
-      ? `<a href="${escapeHtml(itemUrl)}" target="_blank" rel="noopener noreferrer">${listingLabel} ↗</a>`
-      : `<button type="button" data-market-toast="Source listing URL was not returned for this item.">Source unavailable</button>`;
 
     return `<article class="ebay-card">
-      <div class="ebay-card-media ${imageUrl ? '' : 'image-missing'}"><span class="ebay-source-chip">${sourceLabel}</span>${image}</div>
+      <a class="ebay-card-media ${imageUrl ? '' : 'image-missing'}" href="${escapeHtml(detailUrl)}" aria-label="Open ${escapeHtml(item.title || 'connected item')} details"><span class="ebay-source-chip">${sourceLabel}</span>${image}</a>
       <div class="ebay-card-body">
         <div class="ebay-card-meta"><span>${escapeHtml(condition)}</span><span class="ebay-card-price">${escapeHtml(formatMoney(item.price))}</span></div>
-        <h4>${escapeHtml(item.title || 'Untitled eBay item')}</h4>
+        <h4><a href="${escapeHtml(detailUrl)}">${escapeHtml(item.title || 'Untitled eBay item')}</a></h4>
         <div class="ebay-card-sub">${escapeHtml(seller)}</div>
-        <div class="ebay-card-actions">${sourceAction}<button type="button" data-market-toast="UltraHype relationship analysis for connected items is the next intelligence layer.">UltraHype it</button></div>
+        <div class="ebay-card-actions"><a href="${escapeHtml(detailUrl)}">Open details →</a><a class="intel-link" href="${escapeHtml(detailUrl)}#opportunity">UltraHype it</a></div>
       </div>
     </article>`;
   }).join('');
 
   marketResult.classList.remove('loading');
   marketResult.classList.add('active', 'market-results-mode');
-  marketResult.innerHTML = `<div class="market-result-head"><span>${production ? 'Connected results' : 'Sandbox results'} · ${items.length} returned</span><small>Images remain source-hosted</small></div>${cards ? `<div class="ebay-result-grid">${cards}</div>` : '<p>No matching items were returned for this query.</p>'}<p class="market-result-note">${production ? 'Connected inventory is rendered from source listing data.' : 'Sandbox inventory is test data and is not production eBay inventory.'}</p>`;
+  marketResult.innerHTML = `<div class="market-result-head"><span>${production ? 'Connected results' : 'Sandbox results'} · ${items.length} returned</span><small>Images remain source-hosted</small></div>${cards ? `<div class="ebay-result-grid">${cards}</div>` : '<p>No matching items were returned for this query.</p>'}<p class="market-result-note">${production ? 'Open an UltraHype item view first, then continue to the source listing when ready.' : 'Sandbox inventory is test data. UltraHype item views sit between discovery and the eBay Sandbox source listing.'}</p>`;
 
   marketResult.querySelectorAll('.ebay-card-media img').forEach((img) => {
     img.addEventListener('error', () => {
       img.closest('.ebay-card-media')?.classList.add('image-missing');
       img.remove();
     }, { once: true });
-  });
-  marketResult.querySelectorAll('[data-market-toast]').forEach((button) => {
-    button.addEventListener('click', () => showToast(button.dataset.marketToast || 'UltraHype marketplace action'));
   });
 }
 
@@ -247,7 +256,7 @@ async function searchEbay() {
     if (!response.ok) throw new Error(`Search failed (${response.status})`);
     const payload = await response.json();
     const items = Array.isArray(payload.items) ? payload.items : [];
-    renderEbayCards(items, ebayMode() === 'production');
+    renderEbayCards(items, ebayMode() === 'production', query);
   } catch (error) {
     marketResult.classList.remove('loading', 'market-results-mode');
     marketResult.innerHTML = `<span>Connector unavailable</span><p>${escapeHtml(error.message)}. The public storefront remains isolated from marketplace credentials.</p>`;
