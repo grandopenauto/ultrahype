@@ -1,6 +1,14 @@
 const config = window.ULTRAHYPE_CONFIG || {};
 const catalog = window.ULTRAHYPE_CATALOG || { products: [], hypeStacks: [] };
 
+const shebavonovaPrice = { value: 275, currency: 'USD', label: '$275' };
+for (const product of catalog.products || []) {
+  if (product.id === 'shebavonova-strap-high-top' || product.id === 'shebavonova-spike-low-top') {
+    product.price = { ...shebavonovaPrice };
+    if (product.checkout) product.checkout.label = 'Buy on AliveShoes — $275';
+  }
+}
+
 const year = document.getElementById('year');
 const navToggle = document.querySelector('.nav-toggle');
 const nav = document.querySelector('.site-nav');
