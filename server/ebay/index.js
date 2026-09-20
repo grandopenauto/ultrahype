@@ -14,6 +14,7 @@ const CERT_ID = process.env.CERT_ID || '';
 const EBAY_SCOPE = process.env.EBAY_SCOPE || 'https://api.ebay.com/oauth/api_scope';
 const MARKETPLACE = process.env.EBAY_MARKETPLACE_ID || 'EBAY_US';
 const CACHE_SECONDS = Math.max(30, Number(process.env.CACHE_SECONDS || 300));
+const DETAIL_CACHE_SECONDS = Math.max(60, Number(process.env.DETAIL_CACHE_SECONDS || 900));
 const RATE_LIMIT_PER_MINUTE = Math.max(1, Number(process.env.RATE_LIMIT_PER_MINUTE || 60));
 const INTELLIGENCE_DIR = process.env.UH_INTELLIGENCE_DIR || path.resolve('..', 'data', 'ebay');
 const ALLOWED_ORIGINS = new Set(
@@ -27,9 +28,11 @@ const isSandbox = EBAY_ENV !== 'production';
 const API_BASE = isSandbox ? 'https://api.sandbox.ebay.com' : 'https://api.ebay.com';
 const TOKEN_URL = `${API_BASE}/identity/v1/oauth2/token`;
 const BROWSE_URL = `${API_BASE}/buy/browse/v1/item_summary/search`;
+const ITEM_URL = `${API_BASE}/buy/browse/v1/item`;
 
 let tokenCache = { token: null, expiresAt: 0 };
 const searchCache = new Map();
+const detailCache = new Map();
 const rateBuckets = new Map();
 
 function requireConfig() {
@@ -109,7 +112,47 @@ async function getApplicationToken() {
   return tokenCache.token;
 }
 
+function normalizeImageUrl(value) {
+  if (!value) return null;
+  try {
+    const url = new URL(String(value));
+    if (url.protocol === 'http:' && (url.hostname === 'i.ebayimg.com' || url.hostname.endsWith('.ebayimg.com'))) {
+      url.protocol = 'https:';
+    }
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function imageCandidates(item) {
+  const candidates = [
+    item.image?.imageUrl,
+    item.primaryItemGroup?.itemGroupImage?.imageUrl,
+    ...(Array.isArray(item.additionalImages) ? item.additionalImages.map((x) => x?.imageUrl) : []),
+    ...(Array.isArray(item.primaryItemGroup?.itemGroupAdditionalImages)
+      ? item.primaryItemGroup.itemGroupAdditionalImages.map((x) => x?.imageUrl)
+      : [])
+  ];
+  return [...new Set(candidates.map(normalizeImageUrl).filter(Boolean))];
+}
+
+function isExpired(item) {
+  if (!item?.itemEndDate) return false;
+  const end = Date.parse(item.itemEndDate);
+  return Number.isFinite(end) && end <= Date.now();
+}
+
+function isUnavailable(item) {
+  const values = Array.isArray(item?.estimatedAvailabilities) ? item.estimatedAvailabilities : [];
+  const statuses = values
+    .map((x) => String(x?.estimatedAvailabilityStatus || '').toUpperCase())
+    .filter(Boolean);
+  return statuses.length > 0 && statuses.every((status) => status !== 'IN_STOCK');
+}
+
 function normalizeItem(item) {
+  const images = imageCandidates(item);
   return {
     id: item.itemId || null,
     title: item.title || null,
@@ -117,9 +160,12 @@ function normalizeItem(item) {
       value: item.price.value ?? null,
       currency: item.price.currency ?? null
     } : null,
-    image: item.image?.imageUrl || null,
+    image: images[0] || null,
+    imageUrl: images[0] || null,
+    imageAlternates: images.slice(1, 5),
     condition: item.condition || null,
     itemWebUrl: item.itemWebUrl || null,
+    itemEndDate: item.itemEndDate || null,
     buyingOptions: item.buyingOptions || [],
     seller: item.seller ? {
       username: item.seller.username || null,
@@ -127,6 +173,48 @@ function normalizeItem(item) {
       feedbackScore: item.seller.feedbackScore ?? null
     } : null
   };
+}
+
+async function getItemDetail(itemId, token) {
+  if (!itemId) return null;
+  const cached = detailCache.get(itemId);
+  if (cached && cached.expiresAt > Date.now()) return cached.payload;
+
+  const response = await fetch(`${ITEM_URL}/${encodeURIComponent(itemId)}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
+      Accept: 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    detailCache.set(itemId, { payload: null, expiresAt: Date.now() + 60_000 });
+    return null;
+  }
+
+  const payload = await response.json().catch(() => null);
+  detailCache.set(itemId, {
+    payload,
+    expiresAt: Date.now() + DETAIL_CACHE_SECONDS * 1000
+  });
+  return payload;
+}
+
+async function enrichSummary(summary, token) {
+  if (!summary || isExpired(summary)) return null;
+
+  let source = summary;
+  const summaryImages = imageCandidates(summary);
+  const needsDetail = summaryImages.length === 0;
+
+  if (needsDetail && summary.itemId) {
+    const detail = await getItemDetail(summary.itemId, token);
+    if (detail) source = { ...summary, ...detail };
+  }
+
+  if (isExpired(source) || isUnavailable(source)) return null;
+  return normalizeItem(source);
 }
 
 function cleanLimit(raw) {
@@ -139,7 +227,7 @@ app.get('/health', (_req, res) => {
   res.json({
     ok: true,
     service: 'ultrahype-ebay-gateway',
-    version: '0.2.0',
+    version: '0.3.0',
     environment: EBAY_ENV,
     marketplace: MARKETPLACE
   });
@@ -177,6 +265,12 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
     url.searchParams.set('q', q);
     url.searchParams.set('limit', String(limit));
 
+    // In production, ask eBay to avoid listings already scheduled to have ended.
+    // Sandbox test inventory can contain stale fixtures, so we filter those locally instead.
+    if (!isSandbox) {
+      url.searchParams.set('filter', `itemEndDate:[${new Date().toISOString()}]`);
+    }
+
     const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -193,7 +287,10 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
       throw err;
     }
 
-    const items = Array.isArray(raw.itemSummaries) ? raw.itemSummaries.map(normalizeItem) : [];
+    const summaries = Array.isArray(raw.itemSummaries) ? raw.itemSummaries : [];
+    const enriched = await Promise.all(summaries.map((item) => enrichSummary(item, token)));
+    const items = enriched.filter(Boolean).slice(0, limit);
+
     const payload = {
       provider: 'ebay',
       environment: EBAY_ENV,
@@ -201,6 +298,7 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
       query: q,
       count: items.length,
       total: Number(raw.total || items.length),
+      filteredOut: Math.max(0, summaries.length - items.length),
       items,
       cached: false,
       fetchedAt: new Date().toISOString()
