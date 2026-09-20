@@ -1,0 +1,47 @@
+name: UltraHype Market Memory
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 8 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ultrahype-market-memory
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    env:
+      ULTRAHYPE_API_BASE: https://api.ultrahype.store
+      # Keep generated connected-market pages out of search until production
+      # inventory is verified. Change to production only after the production
+      # Buy API preflight succeeds.
+      ULTRAHYPE_MARKET_ENV: sandbox
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Generate durable market pages
+        run: node scripts/generate-market-memory.mjs
+
+      - name: Commit changed market memory
+        shell: bash
+        run: |
+          if git diff --quiet -- market sitemap.xml; then
+            echo "No market-memory changes."
+            exit 0
+          fi
+          git config user.name "ultrahype-market-memory[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add market sitemap.xml
+          git commit -m "Refresh UltraHype market memory"
+          git push
