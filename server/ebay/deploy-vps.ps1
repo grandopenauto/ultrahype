@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 
 $root = 'C:\HDP\UltraHype\ebay'
 $dst = Join-Path $root 'index.js'
-$tmp = Join-Path $root 'index.js.new'
+$tmp = Join-Path $root 'index.new.js'
 $stamp = Get-Date -Format 'yyyyMMddHHmmss'
 $bak = Join-Path $root "index.js.bak-$stamp"
 $source = 'https://raw.githubusercontent.com/grandopenauto/ultrahype/main/server/ebay/index.js'
