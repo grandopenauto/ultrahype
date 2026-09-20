@@ -35,6 +35,7 @@ const ITEM_URL = `${API_BASE}/buy/browse/v1/item`;
 
 let tokenCache = { token: null, expiresAt: 0 };
 const searchCache = new Map();
+const sourcePageCache = new Map();
 const detailCache = new Map();
 const rateBuckets = new Map();
 
@@ -178,6 +179,22 @@ function isUnavailable(item) {
   return statuses.length > 0 && statuses.every((status) => status !== 'IN_STOCK');
 }
 
+function hasCoreQuality(item) {
+  const price = Number(item?.price?.value);
+  return Boolean(
+    item?.id &&
+    String(item.title || '').trim() &&
+    item.image &&
+    item.itemWebUrl &&
+    Number.isFinite(price) &&
+    price >= 0 &&
+    item.price?.currency &&
+    item.condition &&
+    Array.isArray(item.buyingOptions) &&
+    item.buyingOptions.length
+  );
+}
+
 function normalizeItem(item) {
   const images = imageCandidates(item);
   const location = item?.itemLocation || {};
@@ -220,25 +237,8 @@ function normalizeItem(item) {
   return normalized;
 }
 
-function hasCoreQuality(item) {
-  const price = Number(item?.price?.value);
-  return Boolean(
-    item?.id &&
-    String(item.title || '').trim() &&
-    item.image &&
-    item.itemWebUrl &&
-    Number.isFinite(price) &&
-    price >= 0 &&
-    item.price?.currency &&
-    item.condition &&
-    Array.isArray(item.buyingOptions) &&
-    item.buyingOptions.length
-  );
-}
-
 function needsDetailEnrichment(item) {
-  const normalized = normalizeItem(item || {});
-  return !hasCoreQuality(normalized) || normalized.imageAlternates.length === 0;
+  return !hasCoreQuality(normalizeItem(item || {}));
 }
 
 async function getItemDetail(itemId, token) {
@@ -302,11 +302,20 @@ function cleanOffset(raw) {
   return Math.min(EBAY_SEARCH_WINDOW - 1, Math.max(0, Math.trunc(n)));
 }
 
-async function fetchSearchPage(q, token, offset, limit) {
+function alignedPageOffset(cursor) {
+  return Math.floor(cursor / SOURCE_PAGE_SIZE) * SOURCE_PAGE_SIZE;
+}
+
+async function fetchSearchPage(q, token, offset) {
+  const pageOffset = alignedPageOffset(offset);
+  const cacheKey = `${EBAY_ENV}|${MARKETPLACE}|${q.toLowerCase()}|${pageOffset}|${SOURCE_PAGE_SIZE}`;
+  const cached = sourcePageCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.payload;
+
   const url = new URL(BROWSE_URL);
   url.searchParams.set('q', q);
-  url.searchParams.set('limit', String(limit));
-  url.searchParams.set('offset', String(offset));
+  url.searchParams.set('limit', String(SOURCE_PAGE_SIZE));
+  url.searchParams.set('offset', String(pageOffset));
 
   if (!isSandbox) {
     url.searchParams.set('filter', `itemEndDate:[${new Date().toISOString()}]`);
@@ -323,11 +332,19 @@ async function fetchSearchPage(q, token, offset, limit) {
 
   const raw = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const message = raw.errors?.[0]?.message || raw.message || `eBay Browse failed (${response.status})`;
+    const upstream = raw.errors?.[0];
+    const message = upstream?.message || raw.message || `eBay Browse failed (${response.status})`;
     const err = new Error(message);
     err.status = 502;
+    err.upstreamStatus = response.status;
+    err.upstreamErrorId = upstream?.errorId || upstream?.errorId === 0 ? upstream.errorId : null;
     throw err;
   }
+
+  sourcePageCache.set(cacheKey, {
+    payload: raw,
+    expiresAt: Date.now() + CACHE_SECONDS * 1000
+  });
   return raw;
 }
 
@@ -335,7 +352,7 @@ app.get('/health', (_req, res) => {
   res.json({
     ok: true,
     service: 'ultrahype-ebay-gateway',
-    version: '0.4.0',
+    version: '0.4.1',
     environment: EBAY_ENV,
     marketplace: MARKETPLACE
   });
@@ -363,7 +380,7 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
 
     const limit = cleanLimit(req.query.limit);
     const startOffset = cleanOffset(req.query.offset);
-    const cacheKey = `${MARKETPLACE}|${q.toLowerCase()}|${startOffset}|${limit}|clean-v2`;
+    const cacheKey = `${MARKETPLACE}|${q.toLowerCase()}|${startOffset}|${limit}|clean-v3`;
     const cached = searchCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return res.json({ ...cached.payload, cached: true });
@@ -386,9 +403,10 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
       sourceOffset < EBAY_SEARCH_WINDOW &&
       !exhausted
     ) {
-      const pageLimit = Math.min(SOURCE_PAGE_SIZE, EBAY_SEARCH_WINDOW - sourceOffset);
-      const raw = await fetchSearchPage(q, token, sourceOffset, pageLimit);
-      const summaries = Array.isArray(raw.itemSummaries) ? raw.itemSummaries : [];
+      const pageOffset = alignedPageOffset(sourceOffset);
+      const skipWithinPage = sourceOffset - pageOffset;
+      const raw = await fetchSearchPage(q, token, pageOffset);
+      const pageSummaries = Array.isArray(raw.itemSummaries) ? raw.itemSummaries : [];
       pagesScanned += 1;
 
       if (sourceTotal == null) {
@@ -396,11 +414,31 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
         sourceTotal = Number.isFinite(parsedTotal) ? Math.max(0, parsedTotal) : null;
       }
 
-      if (!summaries.length) {
+      if (!pageSummaries.length) {
         exhausted = true;
         break;
       }
 
+      const retrievableTotal = sourceTotal == null
+        ? EBAY_SEARCH_WINDOW
+        : Math.min(sourceTotal, EBAY_SEARCH_WINDOW);
+
+      if (sourceOffset >= retrievableTotal) {
+        exhausted = true;
+        break;
+      }
+
+      if (skipWithinPage >= pageSummaries.length) {
+        const pageEnd = pageOffset + pageSummaries.length;
+        if (pageSummaries.length < SOURCE_PAGE_SIZE || pageEnd <= sourceOffset) {
+          exhausted = true;
+          break;
+        }
+        sourceOffset = pageEnd;
+        continue;
+      }
+
+      const summaries = pageSummaries.slice(skipWithinPage);
       const enriched = await Promise.all(summaries.map((summary) => enrichSummary(summary, token)));
       let consumed = 0;
 
@@ -426,13 +464,19 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
       sourceOffset += consumed;
 
       if (items.length >= limit) break;
-      if (consumed < summaries.length) break;
-      if (summaries.length < pageLimit) exhausted = true;
+      if (!consumed) {
+        exhausted = true;
+        break;
+      }
 
-      const retrievableTotal = sourceTotal == null
-        ? EBAY_SEARCH_WINDOW
-        : Math.min(sourceTotal, EBAY_SEARCH_WINDOW);
-      if (sourceOffset >= retrievableTotal) exhausted = true;
+      if (sourceOffset >= retrievableTotal) {
+        exhausted = true;
+        break;
+      }
+
+      if (pageSummaries.length < SOURCE_PAGE_SIZE && sourceOffset >= pageOffset + pageSummaries.length) {
+        exhausted = true;
+      }
     }
 
     const retrievableTotal = sourceTotal == null
@@ -451,6 +495,8 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
       startOffset,
       nextOffset: hasMore ? sourceOffset : null,
       hasMore,
+      sourcePageSize: SOURCE_PAGE_SIZE,
+      cursorMode: 'source-index-over-aligned-pages',
       pagesScanned,
       candidatesChecked,
       filteredOut,
@@ -468,7 +514,12 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
 
     res.json(payload);
   } catch (error) {
-    res.status(error.status || 500).json({ error: 'ebay_gateway_error', message: error.message });
+    res.status(error.status || 500).json({
+      error: 'ebay_gateway_error',
+      message: error.message,
+      upstreamStatus: error.upstreamStatus ?? null,
+      upstreamErrorId: error.upstreamErrorId ?? null
+    });
   }
 });
 
