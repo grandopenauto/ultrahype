@@ -5,7 +5,7 @@ $dst = Join-Path $root 'index.js'
 $tmp = Join-Path $root 'index.new.js'
 $stamp = Get-Date -Format 'yyyyMMddHHmmss'
 $bak = Join-Path $root "index.js.bak-$stamp"
-$source = 'https://raw.githubusercontent.com/grandopenauto/ultrahype/main/server/ebay/index.js'
+$source = 'https://raw.githubusercontent.com/grandopenauto/ultrahype/cc2d2928621af43bf1c3d2c6d7fc5f0ee0a7949e/server/ebay/index.js'
 
 Write-Output '=== DOWNLOAD ==='
 Invoke-WebRequest $source -OutFile $tmp -UseBasicParsing
@@ -25,13 +25,14 @@ Start-Sleep -Seconds 3
 Write-Output '=== HEALTH ==='
 $health = Invoke-RestMethod 'http://127.0.0.1:4317/health' -TimeoutSec 20
 Write-Output ('VERSION=' + $health.version)
-if ($health.version -ne '0.3.0') { throw 'unexpected gateway version' }
+if ($health.version -ne '0.3.2') { throw 'unexpected gateway version' }
 
 Write-Output '=== SEARCH QA ==='
 $result = Invoke-RestMethod 'http://127.0.0.1:4317/api/commerce/ebay/search?q=sneakers&limit=8' -TimeoutSec 90
 $items = @($result.items)
 $imageCount = @($items | Where-Object { $_.image }).Count
 Write-Output ('COUNT=' + $items.Count)
+Write-Output ('CANDIDATES=' + $result.candidatesChecked)
 Write-Output ('FILTERED=' + $result.filteredOut)
 Write-Output ('WITH_IMAGE=' + $imageCount)
 foreach ($item in $items) {
