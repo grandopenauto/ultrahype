@@ -1,5 +1,13 @@
 (() => {
   const catalog = window.ULTRAHYPE_CATALOG || { products: [] };
+  const shebavonovaPrice = { value: 275, currency: 'USD', label: '$275' };
+  for (const product of catalog.products || []) {
+    if (product.id === 'shebavonova-strap-high-top' || product.id === 'shebavonova-spike-low-top') {
+      product.price = { ...shebavonovaPrice };
+      if (product.checkout) product.checkout.label = 'Buy on AliveShoes — $275';
+    }
+  }
+
   const root = document.getElementById('product-root');
   const year = document.getElementById('year');
   if (year) year.textContent = new Date().getFullYear();
