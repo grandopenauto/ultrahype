@@ -1,5 +1,5 @@
-/* UltraHype V2.1 connected marketplace cards */
-.market-result.market-results-mode { padding: 14px; }
+/* UltraHype V2.2 connected marketplace cards */
+.market-result.market-results-mode { padding:14px; }
 .market-result-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
 .market-result-head > span { color:#6d6875; font-size:.58rem; font-weight:900; letter-spacing:.12em; text-transform:uppercase; }
 .market-result-head small { color:#686371; font-size:.58rem; }
@@ -25,5 +25,17 @@
 .ebay-card-actions a.intel-link:hover { color:#fff; border-color:rgba(255,255,255,.18); }
 .ebay-card-actions button { color:#aaa5b3; background:rgba(255,255,255,.025); border:1px solid var(--line); }
 .ebay-card-actions button:hover { color:#fff; }
+.market-load-more { margin:16px 2px 2px; padding:14px; display:flex; align-items:center; justify-content:center; gap:14px; flex-wrap:wrap; border:1px solid rgba(255,255,255,.07); border-radius:14px; background:rgba(255,255,255,.018); }
+.market-load-more button { min-height:42px; padding:0 18px; border:1px solid rgba(183,255,60,.28); border-radius:11px; background:rgba(183,255,60,.08); color:#dcff9f; font:inherit; font-size:.67rem; font-weight:900; letter-spacing:.035em; cursor:pointer; transition:transform .18s ease,border-color .18s ease,background .18s ease; }
+.market-load-more button:hover { transform:translateY(-1px); border-color:rgba(183,255,60,.5); background:rgba(183,255,60,.12); }
+.market-load-more button:disabled { opacity:.55; cursor:wait; transform:none; }
+.market-load-more small { max-width:460px; color:#696371; font-size:.58rem; line-height:1.45; }
+.market-load-more.done { padding:10px 14px; }
 .market-result-note { margin:11px 2px 0; color:#625d69; font-size:.62rem; line-height:1.5; }
-@media (max-width:680px){ .ebay-result-grid{grid-template-columns:1fr;} .ebay-card-media{height:190px;} }
+@media (max-width:680px){
+  .market-result-head{align-items:flex-start;flex-direction:column;}
+  .ebay-result-grid{grid-template-columns:1fr;}
+  .ebay-card-media{height:190px;}
+  .market-load-more{align-items:stretch;flex-direction:column;}
+  .market-load-more button{width:100%;}
+}
