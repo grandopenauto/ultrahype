@@ -17,6 +17,9 @@ const CACHE_SECONDS = Math.max(30, Number(process.env.CACHE_SECONDS || 300));
 const DETAIL_CACHE_SECONDS = Math.max(60, Number(process.env.DETAIL_CACHE_SECONDS || 900));
 const RATE_LIMIT_PER_MINUTE = Math.max(1, Number(process.env.RATE_LIMIT_PER_MINUTE || 60));
 const INTELLIGENCE_DIR = process.env.UH_INTELLIGENCE_DIR || path.resolve('..', 'data', 'ebay');
+const SOURCE_PAGE_SIZE = 50;
+const MAX_SCAN_PAGES_PER_REQUEST = 4;
+const EBAY_SEARCH_WINDOW = 10_000;
 const ALLOWED_ORIGINS = new Set(
   String(process.env.ALLOWED_ORIGINS || 'https://ultrahype.store')
     .split(',')
@@ -127,11 +130,15 @@ function isPrivateHostname(hostname) {
   return false;
 }
 
-function normalizeImageUrl(value) {
+function normalizePublicHttpsUrl(value, { upgradeEbayImage = false } = {}) {
   if (!value) return null;
   try {
     const url = new URL(String(value));
-    if (url.protocol === 'http:' && (url.hostname === 'i.ebayimg.com' || url.hostname.endsWith('.ebayimg.com'))) {
+    if (
+      upgradeEbayImage &&
+      url.protocol === 'http:' &&
+      (url.hostname === 'i.ebayimg.com' || url.hostname.endsWith('.ebayimg.com'))
+    ) {
       url.protocol = 'https:';
     }
     if (url.protocol !== 'https:' || isPrivateHostname(url.hostname)) return null;
@@ -139,6 +146,10 @@ function normalizeImageUrl(value) {
   } catch {
     return null;
   }
+}
+
+function normalizeImageUrl(value) {
+  return normalizePublicHttpsUrl(value, { upgradeEbayImage: true });
 }
 
 function imageCandidates(item) {
@@ -169,9 +180,11 @@ function isUnavailable(item) {
 
 function normalizeItem(item) {
   const images = imageCandidates(item);
-  return {
+  const location = item?.itemLocation || {};
+  const normalized = {
     id: item.itemId || null,
     title: item.title || null,
+    shortDescription: item.shortDescription || null,
     price: item.price ? {
       value: item.price.value ?? null,
       currency: item.price.currency ?? null
@@ -180,15 +193,52 @@ function normalizeItem(item) {
     imageUrl: images[0] || null,
     imageAlternates: images.slice(1, 5),
     condition: item.condition || null,
-    itemWebUrl: item.itemWebUrl || null,
+    itemWebUrl: normalizePublicHttpsUrl(item.itemWebUrl),
     itemEndDate: item.itemEndDate || null,
     buyingOptions: item.buyingOptions || [],
+    categoryId: item.categoryId || item.category?.categoryId || null,
+    categoryPath: item.categoryPath || null,
+    itemLocation: {
+      city: location.city || null,
+      stateOrProvince: location.stateOrProvince || null,
+      country: location.country || null
+    },
     seller: item.seller ? {
       username: item.seller.username || null,
       feedbackPercentage: item.seller.feedbackPercentage ?? null,
       feedbackScore: item.seller.feedbackScore ?? null
     } : null
   };
+
+  normalized.quality = {
+    coreComplete: hasCoreQuality(normalized),
+    imageCount: images.length,
+    hasSeller: Boolean(normalized.seller?.username),
+    hasEndDate: Boolean(normalized.itemEndDate)
+  };
+
+  return normalized;
+}
+
+function hasCoreQuality(item) {
+  const price = Number(item?.price?.value);
+  return Boolean(
+    item?.id &&
+    String(item.title || '').trim() &&
+    item.image &&
+    item.itemWebUrl &&
+    Number.isFinite(price) &&
+    price >= 0 &&
+    item.price?.currency &&
+    item.condition &&
+    Array.isArray(item.buyingOptions) &&
+    item.buyingOptions.length
+  );
+}
+
+function needsDetailEnrichment(item) {
+  const normalized = normalizeItem(item || {});
+  return !hasCoreQuality(normalized) || normalized.imageAlternates.length === 0;
 }
 
 async function getItemDetail(itemId, token) {
@@ -227,27 +277,65 @@ async function enrichSummary(summary, token) {
   if (!summary || isExpired(summary)) return null;
 
   let source = summary;
-  if (imageCandidates(summary).length === 0 && summary.itemId) {
+  if (needsDetailEnrichment(summary) && summary.itemId) {
     const detail = await getItemDetail(summary.itemId, token);
     if (detail) source = { ...summary, ...detail };
   }
 
   if (isExpired(source) || isUnavailable(source)) return null;
-  if (imageCandidates(source).length === 0) return null;
-  return normalizeItem(source);
+
+  const normalized = normalizeItem(source);
+  if (!hasCoreQuality(normalized)) return null;
+  normalized.quality.coreComplete = true;
+  return normalized;
 }
 
 function cleanLimit(raw) {
   const n = Number(raw || 12);
   if (!Number.isFinite(n)) return 12;
-  return Math.min(50, Math.max(1, Math.trunc(n)));
+  return Math.min(48, Math.max(1, Math.trunc(n)));
+}
+
+function cleanOffset(raw) {
+  const n = Number(raw || 0);
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(EBAY_SEARCH_WINDOW - 1, Math.max(0, Math.trunc(n)));
+}
+
+async function fetchSearchPage(q, token, offset, limit) {
+  const url = new URL(BROWSE_URL);
+  url.searchParams.set('q', q);
+  url.searchParams.set('limit', String(limit));
+  url.searchParams.set('offset', String(offset));
+
+  if (!isSandbox) {
+    url.searchParams.set('filter', `itemEndDate:[${new Date().toISOString()}]`);
+  }
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
+      Accept: 'application/json'
+    },
+    signal: AbortSignal.timeout(20_000)
+  });
+
+  const raw = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = raw.errors?.[0]?.message || raw.message || `eBay Browse failed (${response.status})`;
+    const err = new Error(message);
+    err.status = 502;
+    throw err;
+  }
+  return raw;
 }
 
 app.get('/health', (_req, res) => {
   res.json({
     ok: true,
     service: 'ultrahype-ebay-gateway',
-    version: '0.3.2',
+    version: '0.4.0',
     environment: EBAY_ENV,
     marketplace: MARKETPLACE
   });
@@ -274,43 +362,83 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
     if (!q) return res.status(400).json({ error: 'missing_query' });
 
     const limit = cleanLimit(req.query.limit);
-    const candidateLimit = Math.min(50, Math.max(limit, limit + 4));
-    const cacheKey = `${MARKETPLACE}|${q.toLowerCase()}|${limit}`;
+    const startOffset = cleanOffset(req.query.offset);
+    const cacheKey = `${MARKETPLACE}|${q.toLowerCase()}|${startOffset}|${limit}|clean-v2`;
     const cached = searchCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return res.json({ ...cached.payload, cached: true });
     }
 
     const token = await getApplicationToken();
-    const url = new URL(BROWSE_URL);
-    url.searchParams.set('q', q);
-    url.searchParams.set('limit', String(candidateLimit));
+    const items = [];
+    const seen = new Set();
+    let sourceOffset = startOffset;
+    let sourceTotal = null;
+    let candidatesChecked = 0;
+    let filteredOut = 0;
+    let duplicatesSkipped = 0;
+    let pagesScanned = 0;
+    let exhausted = false;
 
-    if (!isSandbox) {
-      url.searchParams.set('filter', `itemEndDate:[${new Date().toISOString()}]`);
+    while (
+      items.length < limit &&
+      pagesScanned < MAX_SCAN_PAGES_PER_REQUEST &&
+      sourceOffset < EBAY_SEARCH_WINDOW &&
+      !exhausted
+    ) {
+      const pageLimit = Math.min(SOURCE_PAGE_SIZE, EBAY_SEARCH_WINDOW - sourceOffset);
+      const raw = await fetchSearchPage(q, token, sourceOffset, pageLimit);
+      const summaries = Array.isArray(raw.itemSummaries) ? raw.itemSummaries : [];
+      pagesScanned += 1;
+
+      if (sourceTotal == null) {
+        const parsedTotal = Number(raw.total);
+        sourceTotal = Number.isFinite(parsedTotal) ? Math.max(0, parsedTotal) : null;
+      }
+
+      if (!summaries.length) {
+        exhausted = true;
+        break;
+      }
+
+      const enriched = await Promise.all(summaries.map((summary) => enrichSummary(summary, token)));
+      let consumed = 0;
+
+      for (let index = 0; index < enriched.length; index += 1) {
+        const candidate = enriched[index];
+        consumed = index + 1;
+        candidatesChecked += 1;
+
+        if (!candidate) {
+          filteredOut += 1;
+          continue;
+        }
+        if (seen.has(candidate.id)) {
+          duplicatesSkipped += 1;
+          continue;
+        }
+
+        seen.add(candidate.id);
+        items.push(candidate);
+        if (items.length >= limit) break;
+      }
+
+      sourceOffset += consumed;
+
+      if (items.length >= limit) break;
+      if (consumed < summaries.length) break;
+      if (summaries.length < pageLimit) exhausted = true;
+
+      const retrievableTotal = sourceTotal == null
+        ? EBAY_SEARCH_WINDOW
+        : Math.min(sourceTotal, EBAY_SEARCH_WINDOW);
+      if (sourceOffset >= retrievableTotal) exhausted = true;
     }
 
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
-        Accept: 'application/json'
-      },
-      signal: AbortSignal.timeout(20_000)
-    });
-
-    const raw = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      const message = raw.errors?.[0]?.message || raw.message || `eBay Browse failed (${response.status})`;
-      const err = new Error(message);
-      err.status = 502;
-      throw err;
-    }
-
-    const summaries = Array.isArray(raw.itemSummaries) ? raw.itemSummaries : [];
-    const enriched = await Promise.all(summaries.map((item) => enrichSummary(item, token)));
-    const validItems = enriched.filter(Boolean);
-    const items = validItems.slice(0, limit);
+    const retrievableTotal = sourceTotal == null
+      ? EBAY_SEARCH_WINDOW
+      : Math.min(sourceTotal, EBAY_SEARCH_WINDOW);
+    const hasMore = !exhausted && sourceOffset < retrievableTotal && sourceOffset < EBAY_SEARCH_WINDOW;
 
     const payload = {
       provider: 'ebay',
@@ -318,9 +446,16 @@ app.get('/api/commerce/ebay/search', async (req, res) => {
       marketplace: MARKETPLACE,
       query: q,
       count: items.length,
-      total: Number(raw.total || items.length),
-      candidatesChecked: summaries.length,
-      filteredOut: Math.max(0, summaries.length - validItems.length),
+      total: sourceTotal ?? items.length,
+      retrievableTotal,
+      startOffset,
+      nextOffset: hasMore ? sourceOffset : null,
+      hasMore,
+      pagesScanned,
+      candidatesChecked,
+      filteredOut,
+      duplicatesSkipped,
+      qualityPolicy: 'active + public HTTPS image + source URL + price + currency + condition + buying option',
       items,
       cached: false,
       fetchedAt: new Date().toISOString()
