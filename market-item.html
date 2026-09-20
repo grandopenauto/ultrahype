@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#07070a" />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="description" content="UltraHype connected marketplace item detail and opportunity view." />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="v2.css" />
+  <link rel="stylesheet" href="market-item.css" />
+  <title>Connected Item — UltraHype</title>
+</head>
+<body class="market-item-page">
+  <div class="noise" aria-hidden="true"></div>
+  <div class="orb orb-a" aria-hidden="true"></div>
+  <div class="orb orb-b" aria-hidden="true"></div>
+
+  <header class="site-header shell">
+    <a class="brand" href="index.html" aria-label="UltraHype home">
+      <span class="brand-glyph" aria-hidden="true">UH</span>
+      <span class="brand-word">ULTRAHYPE</span>
+    </a>
+    <nav class="market-item-nav" aria-label="Item navigation">
+      <a href="index.html#ebay">Connected inventory</a>
+      <a href="index.html#fshack">FSHack</a>
+      <a href="index.html#hypestacks">HypeStacks</a>
+    </nav>
+  </header>
+
+  <main id="market-item-root" class="shell market-item-main" aria-live="polite">
+    <section class="market-item-loading">
+      <span class="kicker">CONNECTED ITEM</span>
+      <h1>Loading marketplace item…</h1>
+      <p>Resolving the source record through UltraHype.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer shell">
+    <a class="brand" href="index.html"><span class="brand-glyph">UH</span><span class="brand-word">ULTRAHYPE</span></a>
+    <p>Connected marketplace data remains source-hosted and source-attributed.</p>
+    <span class="footer-status"><i></i> ITEM VIEW</span>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="market-item.js"></script>
+</body>
+</html>
