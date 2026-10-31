@@ -64,3 +64,28 @@
 @media(max-width:850px) { .uh-card-grid{grid-template-columns:1fr;} .uh-card{min-height:240px;} .uh-hero,.uh-content{grid-template-columns:1fr;} .uh-aside{position:static;} .uh-art{min-height:250px;} }
 @media(max-width:530px) { .uh-topnav{gap:8px;} .uh-brand{font-size:.85rem;} .uh-wrap{width:min(100% - 28px,1120px);} .uh-topbar .uh-wrap{align-items:flex-start;padding:12px 0;flex-direction:column;} .uh-hero-copy{padding-top:14px;} }
 @media(prefers-reduced-motion:reduce){.uh-card{transition:none;}}
+
+/* Product-to-business editorial bridges */
+.uh-build-bridge{margin:24px 0;display:flex;align-items:center;justify-content:space-between;gap:25px;background:linear-gradient(125deg,#13271a,#151e30);border:1px solid #597064;border-radius:18px;padding:26px}
+.uh-build-bridge h3{color:#f7ffef;font-size:1.6rem;letter-spacing:-.035em;margin:10px 0}
+.uh-build-bridge p{color:#d2e0d7;line-height:1.6;max-width:630px}
+.uh-build-bridge .uh-button{flex:none}
+.uh-business-lanes{display:grid;gap:15px;margin-top:25px}
+.uh-business-lanes article{padding:20px;background:#131f30;border:1px solid #415168;border-radius:15px}
+.uh-business-lanes h3{margin:12px 0 6px;color:#f4f6fb}
+.uh-business-lanes p{margin:5px 0 12px}
+.uh-business-lanes a{font-weight:800;color:#b7fb5b}
+.uh-live-group{padding:24px 0;border-bottom:1px solid #3a4a61}
+.uh-live-group h3{margin:0 0 12px}
+.uh-live-items{display:grid;gap:12px}
+.uh-live-card{display:grid;grid-template-columns:112px 1fr;gap:16px;border:1px solid #34445a;background:#131e2c;border-radius:14px;padding:14px}
+.uh-live-card img{width:112px;height:112px;object-fit:contain;background:#f4f5f8;border-radius:9px}
+.uh-live-copy h4{font-size:1.05rem;color:#f4f8fc;margin:0 0 9px}
+.uh-live-copy p{margin:4px 0}
+.uh-live-meta{font-size:.85rem;color:#b7c4d8!important;line-height:1.5!important}
+.uh-live-price{font-size:1.2rem;font-weight:850;color:#eafbd0!important}
+.uh-listing-cta,.uh-listing-more{display:inline-block;margin:10px 0 0;font-weight:800;color:#b7fb5b!important}
+#ps5-refresh{margin-top:18px;cursor:pointer;border:0}
+#ps5-refresh:disabled{opacity:.6;cursor:wait}
+@media(max-width:750px){.uh-build-bridge{align-items:start;flex-direction:column}}
+@media(max-width:440px){.uh-live-card{grid-template-columns:1fr}.uh-live-card img{width:100%;max-height:175px}}
