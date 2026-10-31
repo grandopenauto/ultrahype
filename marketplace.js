@@ -410,7 +410,7 @@ async function loadFreshDiscoveries() {
     items.forEach(cacheItem);
     freshRoot.innerHTML = items.length
       ? items.map((item) => signalCard({ itemId: item.id, title: item.title, imageUrl: item.imageUrl || item.image, price: item.price, condition: item.condition, seller: item.seller?.username || null, query: item.seedQuery }, 'FRESH DISCOVERY')).join('')
-      : '<div class="marketplace-empty">No clean fresh discoveries were returned from the connected Sandbox mix.</div>';
+      : '<div class="marketplace-empty">No clean fresh discoveries were returned from the connected inventory source.</div>';
   } catch {
     freshRoot.innerHTML = '<div class="marketplace-empty">Fresh connected discovery is temporarily unavailable.</div>';
   }
