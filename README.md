@@ -107,3 +107,16 @@ Pokémon policy constraints: eBay Live requires eligibility. eBay chance-listing
 4. Check guide accuracy and add original product demonstrations with verifiable results.
 5. Validate privacy-respecting analytics for page views, kit generation, item detail and outbound affiliate clicks.
 6. Only then design a secure BuildThisMedia brief endpoint and user-authorized VPSBridge deployment workflow. No private automation credentials in public JS.
+
+## Sponsor-ready Pokémon 3 + 9 showcase (draft)
+
+The Pokémon guide's `showcase.js` obtains current eBay inventory from the protected production adapter only when a token-valid production status is confirmed. Three **featured** positions are reserved for actual, approved time-bounded sponsored or promotional-partner listings, falling back to clearly marked editorial/eligible affiliate picks when empty; up to nine distinct non-featured items are randomized from Pokémon-specific source queries.
+
+- No live sponsorships exist in the source registry yet: `discover/pokemon/featured-placements.json` is deliberately empty.
+- Future manual placements must use `{kind, approved, itemId, sellerUsername, startsAt, endsAt}`, where kind is `sponsored` or `partner`, approved is `true`, and dates are valid ISO strings. The source verifies current eBay item data, the seller, and listing quality before labeling it. **Never set approved without a genuine agreement and documented approval.**
+- Sponsored means paid; partner means an actual promotional arrangement (including in-kind arrangements). Affiliate picks must not be called sponsors. All eBay links may produce commissions; prominent disclosures appear beside the shelf. The final outbound source link uses `rel="sponsored"`.
+- The unfeatured nine are shuffled deterministically per UTC day and can be reshuffled using the button. Unrelated, broken, parts-only, unverified, nonphysical or mystery-pull listings are filtered. Results are not a quality rank or the cheapest deals.
+- Placement promises should not be sold until the full buyer experience and source availability have been measured. If a promoted listing expires or no longer matches its specified seller, the slot automatically falls back to an editorial selection.
+- Before revenue claims, verify the EPN URL and click attribution end-to-end, as well as eBay approval for promotion method, disclosures and compliant seller eligibility.
+
+No backend keys or partner personal contact data are stored in the public registry.

@@ -306,7 +306,7 @@ function renderItem(item, browseContext = null) {
         </div>
 
         <div class="market-item-actions">
-          ${itemUrl ? `<a class="source" href="${escapeHtml(itemUrl)}" target="_blank" rel="noopener noreferrer">${sourceButton}</a>` : '<button class="source" type="button" disabled>Source listing unavailable</button>'}
+          ${itemUrl ? `<a class="source" href="${escapeHtml(itemUrl)}" target="_blank" rel="sponsored noopener noreferrer">${sourceButton}</a>` : '<button class="source" type="button" disabled>Source listing unavailable</button>'}
           <a class="secondary" href="#opportunity">Explore opportunity layer ↓</a>
         </div>
         <p class="market-item-caution">Price, availability, condition and source details remain controlled by the marketplace listing. Confirm the source listing before transacting.</p>
