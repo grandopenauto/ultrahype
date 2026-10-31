@@ -12,6 +12,16 @@ assert.match(backend, /affiliateCampaignId/);
 console.log('Backend syntax and ePN source checks OK');
 const jsPaths = ['build/builder.js', 'discover/ps5/comparison.js', 'discover/pokemon/showcase.js', 'marketplace.js', 'app.js'];
 for (const path of jsPaths) { new vm.Script(read(path), { filename: path }); console.log('JS syntax OK:', path); }
+// Fail CI if admin-only tooling becomes part of the public site again.
+assert.equal(fs.existsSync(new URL('../campaign-studio/index.html', import.meta.url)), false, 'Campaign admin must not be publicly served');
+assert.equal(fs.existsSync(new URL('../campaign-studio/studio.js', import.meta.url)), false, 'Campaign admin JS must not be public');
+assert.equal(fs.existsSync(new URL('../campaign-studio/studio.css', import.meta.url)), false, 'Campaign admin CSS must not be public');
+const publicPages = ['index.html', 'build/index.html', 'build/builder.js'];
+for (const path of publicPages) {
+  const source = read(path);
+  assert.doesNotMatch(source, /campaign-studio\//i, 'No public admin links: ' + path);
+  assert.doesNotMatch(source, /\bVPSBridge\b|\bVPS\b/i, 'No internal infrastructure names in public UX: ' + path);
+}
 const home = read('index.html');
 const builder = read('build/index.html');
 const ps5 = read('discover/ps5/index.html');
