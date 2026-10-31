@@ -184,12 +184,12 @@
       }
       for (const group of successes) {
         const item = group.items.find(x => !picks.some(p => String(p.item.id) === String(x.id)));
-        if (item && picks.length < 3) picks.push({item,label:'Featured affiliate discovery',note:'Editorial selection · UltraHype may earn a commission',query:group.source.query});
+        if (item && picks.length < 3) picks.push({item,label:validHttps(item.affiliateWebUrl) ? 'Featured affiliate pick' : 'Featured editorial pick',note:'Editorial selection · UltraHype may receive commission from qualifying purchases',query:group.source.query});
       }
       for (const item of pool) {
         if (picks.length >= 3) break;
         if (!picks.some(x => String(x.item.id) === String(item.id)))
-          picks.push({item,label:'Featured affiliate discovery',note:'Editorial selection · UltraHype may earn a commission',query:item._uhQuery});
+          picks.push({item,label:validHttps(item.affiliateWebUrl) ? 'Featured affiliate pick' : 'Featured editorial pick',note:'Editorial selection · UltraHype may receive commission from qualifying purchases',query:item._uhQuery});
       }
       reserved = new Set(picks.map(x => String(x.item.id)));
       featuredRoot.replaceChildren();
