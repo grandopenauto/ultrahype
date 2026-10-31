@@ -10,13 +10,25 @@ assert.match(backend, /X-EBAY-C-ENDUSERCTX/);
 assert.match(backend, /itemAffiliateWebUrl/);
 assert.match(backend, /affiliateCampaignId/);
 console.log('Backend syntax and ePN source checks OK');
-const jsPaths = ['build/builder.js', 'discover/ps5/comparison.js', 'discover/pokemon/showcase.js', 'marketplace.js', 'app.js'];
+const jsPaths = ['build/builder.js', 'campaign-studio/studio.js', 'discover/ps5/comparison.js', 'discover/pokemon/showcase.js', 'marketplace.js', 'app.js'];
 for (const path of jsPaths) { new vm.Script(read(path), { filename: path }); console.log('JS syntax OK:', path); }
 const home = read('index.html');
 const builder = read('build/index.html');
 const ps5 = read('discover/ps5/index.html');
 const pokemon = read('discover/pokemon/index.html');
 const sitemap = read('sitemap.xml');
+const studio = read('campaign-studio/index.html');
+const studioScript = read('campaign-studio/studio.js');
+assert.match(studio, /id="uh-generate"/);
+assert.match(studio, /id="uh-export"/);
+assert.match(studio, /studio\.css/);
+assert.match(studio, /name="robots" content="noindex,nofollow"/);
+assert.match(studio, /Prepublication gates/);
+assert.match(studioScript, /postingAuthorized:false/);
+assert.match(studioScript, /buildThisMediaConnected:false/);
+assert.match(studioScript, /utm_campaign/);
+assert.match(studioScript, /campaignId/);
+assert.match(home, /campaign-studio\//);
 assert.match(home, /id="uh-guides"/);
 assert.match(home, /href="build\/"/);
 for(const slug of ['ps5','pokemon','refurbished-iphone']) {
