@@ -421,6 +421,12 @@ if (searchInput) searchInput.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') startQuerySearch(searchInput.value);
 });
 
+// Editorial guide deep links open a relevant live-search surface without inventing product prices.
+const initialDiscoveryQuery = new URLSearchParams(window.location.search).get('q');
+if (initialDiscoveryQuery && initialDiscoveryQuery.trim()) {
+  startQuerySearch(initialDiscoveryQuery.slice(0, 120));
+}
+
 Promise.allSettled([
   loadStatus(),
   loadCategories(),
