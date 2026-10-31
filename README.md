@@ -120,3 +120,13 @@ The Pokémon guide's `showcase.js` obtains current eBay inventory from the prote
 - Before revenue claims, verify the EPN URL and click attribution end-to-end, as well as eBay approval for promotion method, disclosures and compliant seller eligibility.
 
 No backend keys or partner personal contact data are stored in the public registry.
+
+## UH Campaign Studio (local-only V0.1)
+
+The public, noindex `campaign-studio/` route is an operational preview to create original channel-specific campaign drafts. It includes PS5 / Pokémon / refurbished iPhone stories with shopper, discovery and business-opportunity angles; LinkedIn, X, Pinterest, Instagram, video, GIPHY Brand and consent-based email variants; UTM-tagged page destinations; and an exportable JSON BuildThisMedia handoff packet.
+
+**No posting, account connection, campaign scheduling, payment spending, scraping, crawling or VPS automation is performed.** Clicking Generate uses only local JavaScript; Copy and Download leave the user in control. Six human review gates appear for evidence, rights, disclosure, link quality, platform terms and final approval. The export is explicitly a draft with `postingAuthorized:false`.
+
+Potential next phase: authenticated editorial pipeline with idea intake, evidence citations, media production jobs, per-channel policy verification, human review, scheduled distribution only through approved provider integrations, and real analytics/event capture. Keep source evidence and trademark rights in the approval record. Avoid automatic repetitive promotional posting, unsolicited messages and Craigslist affiliate or traffic-driving posts (disallowed by Craigslist's prohibited-content rules).
+
+GIPHY brand note: this is company promotion, so request a Brand Channel, not a noncommercial Creator Channel; sticker uploads require original transparent animated content and relevant tags.
