@@ -124,3 +124,7 @@ No backend keys or partner personal contact data are stored in the public regist
 ## Campaign production admin separation
 
 Internal campaign-production tools are not hosted by the public GitHub Pages storefront. The public site contains only shopper-facing content and product-to-opportunity guides. Any future campaign administration must be hosted independently behind verified server-side authentication, access controls, authorization checks, and protected storage. No admin credential or internal workflow endpoint belongs in the public repository.
+
+### Public-site CI security guard
+
+Automated tests fail if the admin studio files or navigation reappear in the public storefront, or if the specified internal deployment terminology appears in shopper-facing site files. This is a publication safeguard, not a replacement for access control or a private repository. Prior public Git history may still contain previous copies and must not be treated as private.
