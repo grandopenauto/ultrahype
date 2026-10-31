@@ -1,8 +1,15 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import vm from 'node:vm';
 
 function read(path) { return fs.readFileSync(new URL('../' + path, import.meta.url), 'utf8'); }
+execFileSync(process.execPath, ['--check', new URL('../server/ebay/index.js', import.meta.url).pathname], { stdio: 'pipe' });
+const backend = read('server/ebay/index.js');
+assert.match(backend, /X-EBAY-C-ENDUSERCTX/);
+assert.match(backend, /itemAffiliateWebUrl/);
+assert.match(backend, /affiliateCampaignId/);
+console.log('Backend syntax and ePN source checks OK');
 const jsPaths = ['build/builder.js', 'discover/ps5/comparison.js', 'marketplace.js', 'app.js'];
 for (const path of jsPaths) { new vm.Script(read(path), { filename: path }); console.log('JS syntax OK:', path); }
 const home = read('index.html');
