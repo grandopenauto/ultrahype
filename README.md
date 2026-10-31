@@ -14,7 +14,7 @@ UltraHype V2 is committed to `main` with a mixed catalog and reusable product-pa
 - Six Digital Cross Dock product lanes
 - HypeStacks capability-discovery surface
 - FSHackability / collection-intelligence interface scaffold with honest unscored states
-- Protected eBay Sandbox discovery/search lane
+- Protected eBay discovery/search lane (front-end configured for production; verify live backend at runtime)
 - UltraHype MarketplaceOS B2B sales page
 - Runtime feature flags through `config.js`
 - No marketplace or payment secrets in the browser
@@ -69,7 +69,7 @@ Scores should only be displayed when backed by real marketplace and operating da
 
 - **GitHub Pages** — public storefront, product pages, discovery, and B2B sales surfaces
 - **Protected HDP backend** — privileged marketplace, payment, seller, order, inventory, and automation services
-- **eBay adapter** — protected Browse integration; currently Sandbox
+- **eBay adapter** — protected Browse integration; environment is reported by the backend and must be verified at runtime
 - **HDPPay** — future owned checkout lane
 - **FSHack / AgentForSell / other HDP systems** — future catalog and intelligence feeders
 - **Digital Cross Dock** — bounded intake, staging, manifesting, routing, and controlled delivery pattern
@@ -85,3 +85,7 @@ Create the product once, then route it to the channels and capability paths that
 `Product record → UltraHype → product page / HypeStack / FSHack intelligence / HDPPay / eBay / future channels`
 
 UltraHype remains useful even when any one external marketplace is unavailable.
+
+## UH moment buyer guides (draft)
+
+The discovery guide pages at `discover/ps5/`, `discover/pokemon/`, and `discover/refurbished-iphone/` are editorial buying guides. They compare decision factors and explain possible HypeStack uses, then deep-link to `marketplace.html?q=...` to request current connected inventory. They do not invent prices, rankings, sales volumes, or first-hand testing. Product or pricing claims require source evidence and backend verification. The homepage features these guides, and the sitemap includes their canonical routes. The pages carry an affiliate disclosure.
