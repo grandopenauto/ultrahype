@@ -94,7 +94,7 @@ The discovery guide pages at `discover/ps5/`, `discover/pokemon/`, and `discover
 
 The `build/` route is a static, browser-side blueprint generator, not a connected deployment API. Four starter kits: PS5 creator studio, Pokémon live-selling setup with known inventory, Pokémon card shop and collection tracker, and a **free, non-transactional** digital-reveal demo with fictitious assets.
 
-Buttons generate a project brief with equipment, proposed systems (BuildThisMedia, HobbyShopOS, LinkStream, FSHack, UltraHype and VPSBridge), tasks, revenue hypotheses, constraints and approvals. Copy and JSON export happen locally; no brief is sent to the VPS. Later BuildThisMedia integration requires a reviewed schema, authentication, explicit authorization, a dry-run preview, approval gates, audit trail and confirmed deployment results.
+Buttons generate a project brief with equipment, proposed systems (BuildThisMedia, HobbyShopOS, LinkStream, FSHack, UltraHype and private orchestration system), tasks, revenue hypotheses, constraints and approvals. Copy and JSON export happen locally; no brief is sent to the protected infrastructure. Later BuildThisMedia integration requires a reviewed schema, authentication, explicit authorization, a dry-run preview, approval gates, audit trail and confirmed deployment results.
 
 The PS5 guide includes a fail-closed sample comparison. It checks `/api/commerce/ebay/status` for `ok:true`, `tokenValid:true` and `environment:"production"` before running three source searches. It displays only filtered matched console listings with numeric listing prices, labels shipping/taxes as potentially extra, and never invents sample prices when the source is unavailable. It routes visitors to UltraHype product detail for seller review and purchase routing.
 
@@ -106,7 +106,7 @@ Pokémon policy constraints: eBay Live requires eligibility. eBay chance-listing
 3. Confirm the final checkout/outbound link has a correct ePN tracking URL (the backend normalizes `itemWebUrl`; do not assume commissions without verifying it) and appropriate disclosure.
 4. Check guide accuracy and add original product demonstrations with verifiable results.
 5. Validate privacy-respecting analytics for page views, kit generation, item detail and outbound affiliate clicks.
-6. Only then design a secure BuildThisMedia brief endpoint and user-authorized VPSBridge deployment workflow. No private automation credentials in public JS.
+6. Only then design a secure BuildThisMedia brief endpoint and user-authorized private orchestration system deployment workflow. No private automation credentials in public JS.
 
 ## Sponsor-ready Pokémon 3 + 9 showcase (draft)
 
@@ -121,12 +121,6 @@ The Pokémon guide's `showcase.js` obtains current eBay inventory from the prote
 
 No backend keys or partner personal contact data are stored in the public registry.
 
-## UH Campaign Studio (local-only V0.1)
+## Campaign production admin separation
 
-The public, noindex `campaign-studio/` route is an operational preview to create original channel-specific campaign drafts. It includes PS5 / Pokémon / refurbished iPhone stories with shopper, discovery and business-opportunity angles; LinkedIn, X, Pinterest, Instagram, video, GIPHY Brand and consent-based email variants; UTM-tagged page destinations; and an exportable JSON BuildThisMedia handoff packet.
-
-**No posting, account connection, campaign scheduling, payment spending, scraping, crawling or VPS automation is performed.** Clicking Generate uses only local JavaScript; Copy and Download leave the user in control. Six human review gates appear for evidence, rights, disclosure, link quality, platform terms and final approval. The export is explicitly a draft with `postingAuthorized:false`.
-
-Potential next phase: authenticated editorial pipeline with idea intake, evidence citations, media production jobs, per-channel policy verification, human review, scheduled distribution only through approved provider integrations, and real analytics/event capture. Keep source evidence and trademark rights in the approval record. Avoid automatic repetitive promotional posting, unsolicited messages and Craigslist affiliate or traffic-driving posts (disallowed by Craigslist's prohibited-content rules).
-
-GIPHY brand note: this is company promotion, so request a Brand Channel, not a noncommercial Creator Channel; sticker uploads require original transparent animated content and relevant tags.
+Internal campaign-production tools are not hosted by the public GitHub Pages storefront. The public site contains only shopper-facing content and product-to-opportunity guides. Any future campaign administration must be hosted independently behind verified server-side authentication, access controls, authorization checks, and protected storage. No admin credential or internal workflow endpoint belongs in the public repository.
