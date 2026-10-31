@@ -13,6 +13,7 @@ const APP_ID = process.env.APP_ID || '';
 const CERT_ID = process.env.CERT_ID || '';
 const EBAY_SCOPE = process.env.EBAY_SCOPE || 'https://api.ebay.com/oauth/api_scope';
 const MARKETPLACE = process.env.EBAY_MARKETPLACE_ID || 'EBAY_US';
+const EPN_CAMPAIGN_ID = /^\d{10}$/.test(process.env.EPN_CAMPAIGN_ID || '') ? process.env.EPN_CAMPAIGN_ID : '';
 const CACHE_SECONDS = Math.max(30, Number(process.env.CACHE_SECONDS || 300));
 const DETAIL_CACHE_SECONDS = Math.max(60, Number(process.env.DETAIL_CACHE_SECONDS || 900));
 const RATE_LIMIT_PER_MINUTE = Math.max(1, Number(process.env.RATE_LIMIT_PER_MINUTE || 60));
@@ -212,7 +213,9 @@ function normalizeItem(item) {
     imageUrl: images[0] || null,
     imageAlternates: images.slice(1, 5),
     condition: item.condition || null,
-    itemWebUrl: normalizePublicHttpsUrl(item.itemWebUrl),
+    sourceItemWebUrl: normalizePublicHttpsUrl(item.itemWebUrl),
+    affiliateWebUrl: normalizePublicHttpsUrl(item.itemAffiliateWebUrl),
+    itemWebUrl: normalizePublicHttpsUrl(item.itemAffiliateWebUrl) || normalizePublicHttpsUrl(item.itemWebUrl),
     itemEndDate: item.itemEndDate || null,
     buyingOptions: item.buyingOptions || [],
     categoryId: item.categoryId || item.category?.categoryId || null,
@@ -241,6 +244,18 @@ function needsDetailEnrichment(item) {
   return !hasCoreQuality(normalizeItem(item || {}));
 }
 
+function ebayBrowseHeaders(token) {
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
+    Accept: 'application/json'
+  };
+  if (!isSandbox && EPN_CAMPAIGN_ID) {
+    headers['X-EBAY-C-ENDUSERCTX'] = `affiliateCampaignId=${EPN_CAMPAIGN_ID}`;
+  }
+  return headers;
+}
+
 async function getItemDetail(itemId, token) {
   if (!itemId) return null;
   const cached = detailCache.get(itemId);
@@ -248,11 +263,7 @@ async function getItemDetail(itemId, token) {
 
   try {
     const response = await fetch(`${ITEM_URL}/${encodeURIComponent(itemId)}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
-        Accept: 'application/json'
-      },
+      headers: ebayBrowseHeaders(token),
       signal: AbortSignal.timeout(12_000)
     });
     if (!response.ok) {
@@ -329,11 +340,7 @@ async function fetchSearchPage({ q = '', categoryId = '', seller = '' }, token, 
   if (filters.length) url.searchParams.set('filter', filters.join(','));
 
   const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'X-EBAY-C-MARKETPLACE-ID': MARKETPLACE,
-      Accept: 'application/json'
-    },
+    headers: ebayBrowseHeaders(token),
     signal: AbortSignal.timeout(20_000)
   });
 

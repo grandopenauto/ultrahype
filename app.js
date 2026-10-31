@@ -211,12 +211,29 @@ function ebayMode() {
 function initializeMarketConnector() {
   const ebay = config.integrations?.ebay;
   if (!marketStatus || !marketResult || !ebay?.enabled) return;
-  const production = ebayMode() === 'production';
-  marketStatus.textContent = production ? 'LIVE' : 'SANDBOX LIVE';
+  const apiBase = String(config.apiBase || '').replace(/[/]$/, '');
+  marketStatus.textContent = 'CHECKING';
   marketResult.classList.add('active');
-  marketResult.innerHTML = production
-    ? '<span>API lane live</span><p>Protected eBay discovery is online through the UltraHype backend.</p>'
-    : '<span>Sandbox API lane live</span><p>The protected connector is online with eBay Sandbox test inventory. Production inventory remains disabled until production access is approved and installed.</p>';
+  marketResult.innerHTML = '<span>Checking connector</span><p>Confirming the protected marketplace backend before showing its status.</p>';
+  if (!apiBase) {
+    marketStatus.textContent = 'NOT CONFIGURED';
+    marketResult.innerHTML = '<span>No API configured</span><p>Connected inventory is unavailable on this page.</p>';
+    return;
+  }
+  fetch(`${apiBase}/api/commerce/ebay/status`, { headers: { Accept: 'application/json' } })
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`Status check failed (${response.status})`);
+      return response.json();
+    })
+    .then((payload) => {
+      const environment = String(payload.environment || 'unreported').toUpperCase();
+      marketStatus.textContent = environment;
+      marketResult.innerHTML = '<span>Backend reachable</span><p>The server reports its marketplace environment. Search for an item to check actual inventory and availability.</p>';
+    })
+    .catch(() => {
+      marketStatus.textContent = 'UNVERIFIED';
+      marketResult.innerHTML = '<span>Connector status unavailable</span><p>The configured backend could not be verified. Use marketplace search to retry the connection.</p>';
+    });
 }
 
 function renderEbayCards() {

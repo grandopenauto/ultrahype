@@ -410,7 +410,7 @@ async function loadFreshDiscoveries() {
     items.forEach(cacheItem);
     freshRoot.innerHTML = items.length
       ? items.map((item) => signalCard({ itemId: item.id, title: item.title, imageUrl: item.imageUrl || item.image, price: item.price, condition: item.condition, seller: item.seller?.username || null, query: item.seedQuery }, 'FRESH DISCOVERY')).join('')
-      : '<div class="marketplace-empty">No clean fresh discoveries were returned from the connected Sandbox mix.</div>';
+      : '<div class="marketplace-empty">No clean fresh discoveries were returned from the connected inventory source.</div>';
   } catch {
     freshRoot.innerHTML = '<div class="marketplace-empty">Fresh connected discovery is temporarily unavailable.</div>';
   }
@@ -420,6 +420,12 @@ if (searchButton) searchButton.addEventListener('click', () => startQuerySearch(
 if (searchInput) searchInput.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') startQuerySearch(searchInput.value);
 });
+
+// Editorial guide deep links open a relevant live-search surface without inventing product prices.
+const initialDiscoveryQuery = new URLSearchParams(window.location.search).get('q');
+if (initialDiscoveryQuery && initialDiscoveryQuery.trim()) {
+  startQuerySearch(initialDiscoveryQuery.slice(0, 120));
+}
 
 Promise.allSettled([
   loadStatus(),

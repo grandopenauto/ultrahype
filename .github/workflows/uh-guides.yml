@@ -1,0 +1,34 @@
+name: UH discovery checks
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'build/**'
+      - 'discover/**'
+      - 'discover.css'
+      - 'marketplace.js'
+      - 'app.js'
+      - 'server/ebay/index.js'
+      - 'scripts/check-uh-guides.mjs'
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'build/**'
+      - 'discover/**'
+      - 'discover.css'
+      - 'marketplace.js'
+      - 'app.js'
+      - 'server/ebay/index.js'
+      - 'scripts/check-uh-guides.mjs'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/check-uh-guides.mjs
