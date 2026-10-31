@@ -4,6 +4,7 @@ on:
     paths:
       - 'index.html'
       - 'build/**'
+      - 'campaign-studio/**'
       - 'discover/**'
       - 'discover.css'
       - 'marketplace.js'
@@ -15,6 +16,7 @@ on:
     paths:
       - 'index.html'
       - 'build/**'
+      - 'campaign-studio/**'
       - 'discover/**'
       - 'discover.css'
       - 'marketplace.js'
