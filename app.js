@@ -211,7 +211,7 @@ function ebayMode() {
 function initializeMarketConnector() {
   const ebay = config.integrations?.ebay;
   if (!marketStatus || !marketResult || !ebay?.enabled) return;
-  const apiBase = String(config.apiBase || '').replace(/\\/$/, '');
+  const apiBase = String(config.apiBase || '').replace(/[/]$/, '');
   marketStatus.textContent = 'CHECKING';
   marketResult.classList.add('active');
   marketResult.innerHTML = '<span>Checking connector</span><p>Confirming the protected marketplace backend before showing its status.</p>';
