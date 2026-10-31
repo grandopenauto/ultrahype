@@ -19,6 +19,7 @@ on:
       - 'discover.css'
       - 'marketplace.js'
       - 'app.js'
+      - 'server/ebay/index.js'
       - 'scripts/check-uh-guides.mjs'
 jobs:
   check:
